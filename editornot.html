@@ -67,20 +67,14 @@ body {
         </div>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Foram feitas três tentativa de entrega nos dias , após deixada notificação. Comprovante em anexo.">
+            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto ou sem telefone em funcionamento. Realizada três tentativa de entrega nos dias , notificação deixada. Comprovante em anexo.">
             Cadastro incompleto, tentativas de entrega
           </label>
         </div>
         <div>
           <label>
             <input type="checkbox" class="presetPhrase" data-text="Realizada tentativa de contato via WhatsApp sem retorno, não encontrado contribuinte no endereço indicado, sem endereço de correspondência, impossibilitando entrega da notificação. Comprovante em anexo">
-            Entrega realizada com sucesso
-          </label>
-        </div>
-        <div>
-          <label>
-            <input type="checkbox" class="presetPhrase" data-text="Contribuinte se recusou a receber a notificação. Comprovante em anexo.">
-            Recusa do destinatário em receber a notificação
+            Realizada tentativa de contato via WhatsApp sem retorno
           </label>
         </div>
       </fieldset>
@@ -120,8 +114,8 @@ const CONFIG = {
   margins: { left: 41, right: 41, top: 140, bottom: 49 },
   fontSize: { title: 12, label: 11, minLabel: 7 },
   spacing: { label: 12 },
-  maxRectHeight: 198.45, // 7 cm
-  extraRectWidth: 22.68, // 0,8 cm
+  maxRectHeight: 198.45, 
+  extraRectWidth: 22.68, 
   headerGap: 12.17
 };
 
@@ -168,19 +162,22 @@ function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegu
   });
 }
 
-// ---------- Máscara para telefone ----------
-const telefoneInput = document.getElementById("telefone");
-telefoneInput.addEventListener("input", (e)=>{
-  let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
-  let formattedValues = values.map(v=>{
-    let formatted = '';
-    if(v.length > 0) formatted += '(' + v.slice(0,2);
-    if(v.length >= 3) formatted += ') ' + v.slice(2,7);
-    if(v.length >= 8) formatted += '-' + v.slice(7);
-    return formatted;
-  });
-  e.target.value = formattedValues.join('; ');
-});
+// ---------- Função para localizar frase ----------
+async function findTextPosition(pdf, searchText) {
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    for (let item of textContent.items) {
+      if (item.str && item.str.toLowerCase().includes(searchText.toLowerCase())) {
+        const tx = item.transform[4];
+        const ty = item.transform[5];
+        const fontHeight = item.transform[3];
+        return { page: pageNum - 1, x: tx, y: ty, height: fontHeight };
+      }
+    }
+  }
+  return null;
+}
 
 // ---------- Upload PDF base ----------
 document.getElementById("fileInput").addEventListener("change", async e => {
@@ -201,56 +198,98 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   container.appendChild(input);
 });
 
-// ---------- Desenhar imagens ----------
-async function drawImagesOnPages(pdfLibDoc) {
+// ---------- Desenhar imagens (mantém páginas originais) ----------
+async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
   const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
   if (!uploads.length) return;
-  const pageWidth = pdfLibDoc.getPages()[0].getWidth();
-  const pageHeight = pdfLibDoc.getPages()[0].getHeight();
+
+  const pages = pdfLibDoc.getPages();
+  const pageWidth = pages[0].getWidth();
+  const pageHeight = pages[0].getHeight();
+
   const maxWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
   const maxHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
 
-  let currentPage = pdfLibDoc.getPages().length > 1 ? pdfLibDoc.getPages()[1] : pdfLibDoc.addPage();
-  let yCursor = pageHeight - CONFIG.margins.top;
+  let currentPageIndex = targetPageIndex + 1;
+  let currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
 
-  for (let i = 0; i < uploads.length; i += 2) { 
-    const images = uploads.slice(i, i+2);
-    const pdfImgs = [];
+  let placedImages = 0;
 
-    for (const input of images) {
-      const file = input.files[0];
-      const bytes = await file.arrayBuffer();
-      const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
-      pdfImgs.push({ pdfImg: img, dims: img.scale(1) });
+  for (let i = 0; i < uploads.length; i++) {
+    const file = uploads[i].files[0];
+    const bytes = await file.arrayBuffer();
+    const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+    const dims = img.scale(1);
+
+    // Área para caber 2 imagens na página
+    const halfHeight = maxHeight / 2 - 10;
+    let scale = Math.min(maxWidth / dims.width, halfHeight / dims.height);
+
+    // Se não couber duas, usa a página inteira
+    if (scale <= 0) {
+      scale = Math.min(maxWidth / dims.width, maxHeight / dims.height);
     }
 
-    const totalHeight = pdfImgs.reduce((acc,img)=> acc + img.dims.height, 0);
-    const scale = Math.min(maxWidth / Math.max(...pdfImgs.map(i=>i.dims.width)), maxHeight / totalHeight);
+    const imgWidth = dims.width * scale;
+    const imgHeight = dims.height * scale;
+    const x = (pageWidth - imgWidth) / 2;
 
-    const fundoAltura = pdfImgs.reduce((acc,img)=> acc + img.dims.height * scale, 0);
-    currentPage.drawRectangle({
-      x: CONFIG.margins.left,
-      y: yCursor - fundoAltura,
-      width: maxWidth,
-      height: fundoAltura,
-      color: PDFLib.rgb(1,1,1)
-    });
+    if (placedImages === 0) {
+      // 🔲 fundo branco na metade superior
+      currentPage.drawRectangle({
+        x: CONFIG.margins.left,
+        y: pageHeight - CONFIG.margins.top - maxHeight,
+        width: maxWidth,
+        height: maxHeight,
+        color: PDFLib.rgb(1, 1, 1),
+        opacity: 1
+      });
 
-    let y = yCursor;
-    for (const img of pdfImgs) {
-      img.width = img.dims.width * scale;
-      img.height = img.dims.height * scale;
-      const x = (pageWidth - img.width)/2;
-      y -= img.height;
-      currentPage.drawImage(img.pdfImg, { x, y, width: img.width, height: img.height });
-    }
+      // primeira imagem
+      currentPage.drawImage(img, {
+        x,
+        y: pageHeight - CONFIG.margins.top - imgHeight,
+        width: imgWidth,
+        height: imgHeight
+      });
 
-    if (uploads.length > i+2) {
-      currentPage = pdfLibDoc.addPage();
-      yCursor = pageHeight - CONFIG.margins.top;
+      placedImages = 1;
+    } else {
+      // 🔲 fundo branco na metade inferior
+      currentPage.drawRectangle({
+        x: CONFIG.margins.left,
+        y: CONFIG.margins.bottom,
+        width: maxWidth,
+        height: halfHeight,
+        color: PDFLib.rgb(1, 1, 1),
+        opacity: 1
+      });
+
+      // segunda imagem
+      currentPage.drawImage(img, {
+        x,
+        y: CONFIG.margins.bottom,
+        width: imgWidth,
+        height: imgHeight
+      });
+
+      placedImages = 0;
+
+      // Se ainda há mais imagens → nova página
+      if (i < uploads.length - 1) {
+        currentPageIndex++;
+        currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
+      }
     }
   }
+
+  // remove páginas extras depois da última usada
+  const totalPages = pdfLibDoc.getPages().length;
+  for (let i = totalPages - 1; i > currentPageIndex; i--) {
+    pdfLibDoc.removePage(i);
+  }
 }
+
 
 // ---------- Gerar PDF final ----------
 async function gerarPdfFinal(){
@@ -265,15 +304,14 @@ async function gerarPdfFinal(){
 
   const pdfBytes = await pdfDoc.getData();
   const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
-  if(pdfLibDoc.getPages().length>2){
-    for(let i=pdfLibDoc.getPages().length-1;i>=2;i--) pdfLibDoc.removePage(i);
-  }
 
   const fontBold = await pdfLibDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
   const fontRegular = await pdfLibDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-  const firstPage = pdfLibDoc.getPages()[0];
-  let secondPage = pdfLibDoc.getPages().length>1? pdfLibDoc.getPages()[1] : pdfLibDoc.addPage();
-  const { width } = firstPage.getSize();
+
+  // Buscar posição da frase alvo
+  const pos = await findTextPosition(pdfDoc, "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB");
+  let targetPage = pdfLibDoc.getPages()[pos ? pos.page : 0];
+  const { width, height } = targetPage.getSize();
 
   const totalLines = filledFields.map(f=>{
     const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
@@ -283,20 +321,36 @@ async function gerarPdfFinal(){
 
   const rectHeight = CONFIG.maxRectHeight;
   const rectWidth = width - 100 + CONFIG.extraRectWidth;
-  const rectX = (width - rectWidth)/2;
-  const rectY = CONFIG.margins.bottom;
-  firstPage.drawRectangle({x:rectX, y:rectY, width:rectWidth, height:rectHeight, borderColor:PDFLib.rgb(0,0,0), borderWidth:1, color:PDFLib.rgb(1,1,1), borderRadius:8});
+  let rectX, rectY;
+  if (pos) {
+    rectX = CONFIG.margins.left;
+    rectY = pos.y - rectHeight - 15;
+  } else {
+    rectX = 50;
+    rectY = 100;
+  }
+
+  targetPage.drawRectangle({
+    x:rectX, 
+    y:rectY, 
+    width:rectWidth, 
+    height:rectHeight, 
+    borderColor:PDFLib.rgb(0,0,0), 
+    borderWidth:1, 
+    color:PDFLib.rgb(1,1,1), 
+    borderRadius:8
+  });
 
   const title = "DIVISÃO DE ENTREGA DE NOTIFICAÇÕES – OFICIAIS";
   const fontSizeTitle = CONFIG.fontSize.title;
   const textWidth = fontBold.widthOfTextAtSize(title,fontSizeTitle);
   const textX = rectX + (rectWidth-textWidth)/2;
   const textY = rectY + rectHeight - fontSizeTitle - 10;
-  firstPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
+  targetPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
 
-  drawTextBlock(firstPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
+  drawTextBlock(targetPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
 
-  await drawImagesOnPages(pdfLibDoc);
+  await drawImagesOnPages(pdfLibDoc, pos ? pos.page : 0);
   return pdfLibDoc.save();
 }
 
