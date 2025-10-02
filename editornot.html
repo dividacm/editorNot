@@ -161,7 +161,20 @@ function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegu
     y -= CONFIG.spacing.label/2;
   });
 }
-
+// ---------- Máscara para telefone ----------
+const telefoneInput = document.getElementById("telefone");
+telefoneInput.addEventListener("input", (e)=>{
+  let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
+  let formattedValues = values.map(v=>{
+    let formatted = '';
+    if(v.length > 0) formatted += '(' + v.slice(0,2);
+    if(v.length >= 3) formatted += ') ' + v.slice(2,7);
+    if(v.length >= 8) formatted += '-' + v.slice(7);
+    return formatted;
+  });
+  e.target.value = formattedValues.join('; ');
+});
+  
 // ---------- Função para localizar frase ----------
 async function findTextPosition(pdf, searchText) {
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -404,6 +417,7 @@ checkboxes.forEach(cb=>{
 </script>
 </body>
 </html>
+
 
 
 
