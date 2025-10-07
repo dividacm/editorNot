@@ -56,28 +56,6 @@ body {
       <input type="text" id="endereco" placeholder="Rua, número, bairro">
       <label>Ocorrências/Parecer:</label>
       <textarea id="ocorrencia" rows="5" placeholder="Descreva a ocorrência..."></textarea>
-
-      <fieldset>
-        <legend>Frases Predefinidas</legend>
-        <div>
-          <label>
-            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com onde foi enviada a notificação. Comprovante em anexo.">
-            Contato realizado via WhatsApp com notificação enviada
-          </label>
-        </div>
-        <div>
-          <label>
-            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto ou sem telefone em funcionamento. Realizada três tentativa de entrega nos dias , notificação deixada. Comprovante em anexo.">
-            Cadastro incompleto, tentativas de entrega
-          </label>
-        </div>
-        <div>
-          <label>
-            <input type="checkbox" class="presetPhrase" data-text="Realizada tentativa de contato via WhatsApp sem retorno, não encontrado contribuinte no endereço indicado, sem endereço de correspondência, impossibilitando entrega da notificação. Comprovante em anexo">
-            Realizada tentativa de contato via WhatsApp sem retorno
-          </label>
-        </div>
-      </fieldset>
     </fieldset>
 
     <fieldset>
@@ -110,90 +88,15 @@ body {
 <script>
 let pdfDoc = null;
 let originalFileName = "arquivo.pdf";
-const CONFIG = {
-  margins: { left: 39, right: 41, top: 140, bottom: 49 },
-  fontSize: { title: 12, label: 11, minLabel: 7 },
-  spacing: { label: 12 },
-  maxRectHeight: 198.45, 
-  extraRectWidth: 22.68, 
-  headerGap: 12.17
-};
 
-// ---------- Funções auxiliares ----------
 function showMessage(msg) {
   const messageBox = document.getElementById("messageBox");
   messageBox.textContent = msg;
   messageBox.style.display = "block";
   setTimeout(() => messageBox.style.display = "none", 4000);
 }
-function splitTextIntoLines(text, font, fontSize, maxWidth) {
-  if (!text) return [];
-  text = text.replace(/\n/g,' ');
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = '';
-  for (const w of words) {
-    const testLine = currentLine ? currentLine + ' ' + w : w;
-    const width = font.widthOfTextAtSize(testLine, fontSize);
-    if (width > maxWidth) {
-      if (currentLine) lines.push(currentLine);
-      currentLine = w;
-    } else currentLine = testLine;
-  }
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegular, fontSizeLabel) {
-  if(totalLines.length === 0) return;
-  let fontSize = fontSizeLabel;
-  while(fontSize >= CONFIG.fontSize.minLabel){
-    let totalHeight = totalLines.reduce((acc,item)=> acc + item.lines.length*CONFIG.spacing.label + CONFIG.spacing.label/2, 0) + CONFIG.headerGap;
-    if(totalHeight <= rectHeight) break;
-    fontSize -= 0.5;
-  }
-  let y = yTop - CONFIG.headerGap;
-  totalLines.forEach(item => {
-    page.drawText(item.label, {x: x+12, y: y, size: fontSize, font: fontBold});
-    item.lines.forEach(line=>{
-      page.drawText(line, {x: x+12+item.labelWidth+5, y: y, size: fontSize, font: fontRegular});
-      y -= CONFIG.spacing.label;
-    });
-    y -= CONFIG.spacing.label/2;
-  });
-}
 
-// ---------- Máscara telefone ----------
-const telefoneInput = document.getElementById("telefone");
-telefoneInput.addEventListener("input", (e)=>{
-  let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
-  let formattedValues = values.map(v=>{
-    let formatted = '';
-    if(v.length > 0) formatted += '(' + v.slice(0,2);
-    if(v.length >= 3) formatted += ') ' + v.slice(2,7);
-    if(v.length >= 8) formatted += '-' + v.slice(7);
-    return formatted;
-  });
-  e.target.value = formattedValues.join('; ');
-});
-
-// ---------- Localizar texto ----------
-async function findTextPosition(pdf, searchText) {
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    for (let item of textContent.items) {
-      if (item.str && item.str.toLowerCase().includes(searchText.toLowerCase())) {
-        const tx = item.transform[4];
-        const ty = item.transform[5];
-        const fontHeight = item.transform[3];
-        return { page: pageNum - 1, x: tx, y: ty, height: fontHeight };
-      }
-    }
-  }
-  return null;
-}
-
-// ---------- Upload PDF ----------
+// Upload PDF
 document.getElementById("fileInput").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -202,7 +105,7 @@ document.getElementById("fileInput").addEventListener("change", async e => {
   pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
 });
 
-// ---------- Adicionar imagens (corrigido) ----------
+// Upload Imagens
 document.getElementById("addImageBtn").addEventListener("click", () => {
   const container = document.getElementById("imgUploadsContainer");
   const input = document.createElement("input");
@@ -213,7 +116,6 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   container.appendChild(input);
 
   const row = document.createElement("div");
-  row.className = "imgRow";
   row.style.display = "flex";
   row.style.alignItems = "center";
   row.style.gap = "8px";
@@ -268,18 +170,23 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   input.click();
 });
 
-// ---------- Desenhar imagens (uma embaixo da outra) ----------
-async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
+// === Redimensionar para DUAS por página ===
+async function drawImagesTwoPerPage(pdfLibDoc) {
   const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(i => i.files.length);
   if (!uploads.length) return;
+
   const pages = pdfLibDoc.getPages();
-  const pageWidth = pages[0].getWidth();
-  const pageHeight = pages[0].getHeight();
-  const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
-  const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
-  let currentPageIndex = targetPageIndex + 1;
-  let currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
-  let cursorY = pageHeight - CONFIG.margins.top;
+  const firstPage = pages[0];
+  const pageWidth = firstPage.getWidth();
+  const pageHeight = firstPage.getHeight();
+
+  const usableWidth = pageWidth - 80;
+  const maxImagesPerPage = 2;
+  const imagesPerPageHeight = pageHeight - 160; // margem superior/inferior
+
+  let currentPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
+  let cursorY = pageHeight - 80;
+  let imageCount = 0;
 
   for (const upload of uploads) {
     const file = upload.files[0];
@@ -290,74 +197,40 @@ async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
     const scale = Math.min(usableWidth / dims.width, 1);
     let imgWidth = dims.width * scale;
     let imgHeight = dims.height * scale;
-    if (imgHeight > usableHeight) {
-      const fitScale = usableHeight / imgHeight;
+
+    // Se for mais alto do que metade da página útil, ajusta
+    const maxHeightPerImage = imagesPerPageHeight / maxImagesPerPage;
+    if (imgHeight > maxHeightPerImage) {
+      const fitScale = maxHeightPerImage / imgHeight;
       imgWidth *= fitScale;
       imgHeight *= fitScale;
     }
-    if (cursorY - imgHeight < CONFIG.margins.bottom) {
-      currentPageIndex++;
-      currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
-      cursorY = pageHeight - CONFIG.margins.top;
-    }
-
-    currentPage.drawRectangle({
-      x: CONFIG.margins.left,
-      y: cursorY - imgHeight,
-      width: usableWidth,
-      height: imgHeight,
-      color: PDFLib.rgb(1, 1, 1)
-    });
 
     const x = (pageWidth - imgWidth) / 2;
     const y = cursorY - imgHeight;
-    currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
-    cursorY = y - 10;
-  }
 
-  const totalPages = pdfLibDoc.getPages().length;
-  for (let i = totalPages - 1; i > currentPageIndex; i--) pdfLibDoc.removePage(i);
+    currentPage.drawRectangle({ x, y, width: imgWidth, height: imgHeight, color: PDFLib.rgb(1,1,1) });
+    currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
+
+    cursorY = y - 40;
+    imageCount++;
+
+    if (imageCount % 2 === 0 && upload !== uploads[uploads.length - 1]) {
+      currentPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
+      cursorY = pageHeight - 80;
+    }
+  }
 }
 
-// ---------- Gerar PDF final ----------
 async function gerarPdfFinal(){
   if(!pdfDoc) throw new Error("Carregue primeiro o PDF base.");
-  const fields = [
-    {label:"Telefone(s):", value: document.getElementById("telefone").value},
-    {label:"Nome(s):", value: document.getElementById("nomeContato").value},
-    {label:"Endereço:", value: document.getElementById("endereco").value},
-    {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
-  ];
-  const filled = fields.filter(f => f.value.trim()!=='');
   const pdfBytes = await pdfDoc.getData();
   const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
-  const fontBold = await pdfLibDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-  const fontRegular = await pdfLibDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-  const pos = await findTextPosition(pdfDoc, "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB");
-  let targetPage = pdfLibDoc.getPages()[pos ? pos.page : 0];
-  const { width, height } = targetPage.getSize();
-  const totalLines = filled.map(f=>{
-    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
-    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
-    return {label:f.label, labelWidth, lines};
-  });
-  const rectHeight = CONFIG.maxRectHeight;
-  const rectWidth = width - 100 + CONFIG.extraRectWidth;
-  let rectX = CONFIG.margins.left;
-  let rectY = pos ? pos.y - rectHeight - 15 : 100;
-
-  targetPage.drawRectangle({x:rectX,y:rectY,width:rectWidth,height:rectHeight,borderColor:PDFLib.rgb(0,0,0),borderWidth:1,color:PDFLib.rgb(1,1,1)});
-  const title = "DIVISÃO DE ENTREGA DE NOTIFICAÇÕES – OFICIAIS";
-  const textWidth = fontBold.widthOfTextAtSize(title,CONFIG.fontSize.title);
-  const textX = rectX + (rectWidth-textWidth)/2;
-  const textY = rectY + rectHeight - CONFIG.fontSize.title - 10;
-  targetPage.drawText(title,{x:textX,y:textY,size:CONFIG.fontSize.title,font:fontBold});
-  drawTextBlock(targetPage, rectX, textY - 15, rectHeight - CONFIG.fontSize.title - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
-  await drawImagesOnPages(pdfLibDoc, pos ? pos.page : 0);
+  await drawImagesTwoPerPage(pdfLibDoc);
   return pdfLibDoc.save();
 }
 
-// ---------- Botões ----------
+// Botões
 document.getElementById("previewBtn").addEventListener("click", async ()=>{
   try{
     const newPdfBytes = await gerarPdfFinal();
@@ -366,16 +239,21 @@ document.getElementById("previewBtn").addEventListener("click", async ()=>{
     document.getElementById("previewFrame").src = url;
   }catch(err){ showMessage("Erro: "+err.message); }
 });
+
 document.getElementById("downloadBtn").addEventListener("click", async ()=>{
   try{
     const newPdfBytes = await gerarPdfFinal();
-    const blob = new Blob([newPdfBytes], {type:"application/pdf"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "EDITADO_" + originalFileName;
-    a.click();
+    const handle = await window.showSaveFilePicker({
+      suggestedName: originalFileName,
+      types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(newPdfBytes);
+    await writable.close();
+    showMessage("PDF salvo com sucesso!");
   }catch(err){ showMessage("Erro: "+err.message); }
 });
+
 document.getElementById("clearBtn").addEventListener("click", ()=>{
   document.getElementById("telefone").value = "";
   document.getElementById("nomeContato").value = "";
