@@ -211,7 +211,7 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   container.appendChild(input);
 });
 
-// ---------- Desenhar imagens (mantém páginas originais) ----------
+// ---------- Desenhar imagens (uma embaixo da outra, redimensionadas) ----------
 async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
   const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
   if (!uploads.length) return;
@@ -220,90 +220,68 @@ async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
   const pageWidth = pages[0].getWidth();
   const pageHeight = pages[0].getHeight();
 
-  const maxWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
-  const maxHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
+  const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
+  const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
 
   let currentPageIndex = targetPageIndex + 1;
   let currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
+  let cursorY = pageHeight - CONFIG.margins.top; // posição inicial no topo da área útil
 
-  let placedImages = 0; // quantas imagens estão na página
-
-  for (let i = 0; i < uploads.length; i++) {
-    const file = uploads[i].files[0];
+  for (const upload of uploads) {
+    const file = upload.files[0];
     const bytes = await file.arrayBuffer();
-    const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+    const img = file.type === "image/png"
+      ? await pdfLibDoc.embedPng(bytes)
+      : await pdfLibDoc.embedJpg(bytes);
     const dims = img.scale(1);
 
-    let imgWidth, imgHeight, x, y;
-    const remainingImages = uploads.length - i;
+    // Escala para caber na largura útil
+    const scale = Math.min(usableWidth / dims.width, 1);
+    let imgWidth = dims.width * scale;
+    let imgHeight = dims.height * scale;
 
-    if (remainingImages === 1) {
-      // apenas uma imagem → ocupa toda a área útil
-      const scale = Math.min(maxWidth / dims.width, maxHeight / dims.height);
-      imgWidth = dims.width * scale;
-      imgHeight = dims.height * scale;
-      x = (pageWidth - imgWidth) / 2;
-      y = pageHeight - CONFIG.margins.top - imgHeight;
-
-      // fundo branco
-      currentPage.drawRectangle({
-        x: CONFIG.margins.left,
-        y: CONFIG.margins.bottom,
-        width: maxWidth,
-        height: maxHeight,
-        color: PDFLib.rgb(1, 1, 1),
-        opacity: 1
-      });
-
-      currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
-      placedImages = 0; // página “completa”
-    } else {
-      // duas ou mais imagens → metade da área útil por imagem
-      const halfHeight = maxHeight / 2 - 10;
-      const scale = Math.min(maxWidth / dims.width, halfHeight / dims.height);
-      imgWidth = dims.width * scale;
-      imgHeight = dims.height * scale;
-      x = (pageWidth - imgWidth) / 2;
-
-      if (placedImages === 0) {
-        // primeira imagem da página
-        y = pageHeight - CONFIG.margins.top - imgHeight;
-
-        currentPage.drawRectangle({
-          x: CONFIG.margins.left,
-          y: pageHeight - CONFIG.margins.top - halfHeight,
-          width: maxWidth,
-          height: halfHeight,
-          color: PDFLib.rgb(1, 1, 1),
-          opacity: 1
-        });
-
-        currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
-        placedImages = 1;
-      } else {
-        // segunda imagem da página
-        y = CONFIG.margins.bottom;
-
-        currentPage.drawRectangle({
-          x: CONFIG.margins.left,
-          y: CONFIG.margins.bottom,
-          width: maxWidth,
-          height: halfHeight,
-          color: PDFLib.rgb(1, 1, 1),
-          opacity: 1
-        });
-
-        currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
-        placedImages = 0;
-
-        // nova página se ainda houver mais imagens
-        if (i < uploads.length - 1) {
-          currentPageIndex++;
-          currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
-        }
-      }
+    // Se a imagem for muito alta para caber, reduz proporcionalmente
+    if (imgHeight > usableHeight) {
+      const fitScale = usableHeight / imgHeight;
+      imgWidth *= fitScale;
+      imgHeight *= fitScale;
     }
+
+    // Se não couber mais na página atual, cria nova
+    if (cursorY - imgHeight < CONFIG.margins.bottom) {
+      currentPageIndex++;
+      currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
+      cursorY = pageHeight - CONFIG.margins.top;
+    }
+
+    // Fundo branco da imagem
+    currentPage.drawRectangle({
+      x: CONFIG.margins.left,
+      y: cursorY - imgHeight,
+      width: usableWidth,
+      height: imgHeight,
+      color: PDFLib.rgb(1, 1, 1),
+      opacity: 1
+    });
+
+    // Centraliza horizontalmente
+    const x = (pageWidth - imgWidth) / 2;
+    const y = cursorY - imgHeight;
+
+    // Desenha imagem
+    currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
+
+    // Move o cursor para baixo com espaçamento
+    cursorY = y - 10;
   }
+
+  // Remove páginas extras após a última usada
+  const totalPages = pdfLibDoc.getPages().length;
+  for (let i = totalPages - 1; i > currentPageIndex; i--) {
+    pdfLibDoc.removePage(i);
+  }
+}
+
 
   // remove todas as páginas depois da última imagem
   const totalPages = pdfLibDoc.getPages().length;
@@ -426,6 +404,7 @@ checkboxes.forEach(cb=>{
 </script>
 </body>
 </html>
+
 
 
 
