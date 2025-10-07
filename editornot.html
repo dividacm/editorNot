@@ -56,6 +56,34 @@ body {
       <input type="text" id="endereco" placeholder="Rua, número, bairro">
       <label>Ocorrências/Parecer:</label>
       <textarea id="ocorrencia" rows="5" placeholder="Descreva a ocorrência..."></textarea>
+
+      <fieldset>
+        <legend>Frases Predefinidas</legend>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com onde foi enviada a notificação. Comprovante em anexo.">
+            Contato realizado via WhatsApp com notificação enviada
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Foram feitas três tentativa de entrega nos dias , após deixada notificação. Comprovante em anexo.">
+            Cadastro incompleto, tentativas de entrega
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Realizada tentativa de contato via WhatsApp sem retorno, não encontrado contribuinte no endereço indicado, sem endereço de correspondência, impossibilitando entrega da notificação. Comprovante em anexo">
+            Entrega realizada com sucesso
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Contribuinte se recusou a receber a notificação. Comprovante em anexo.">
+            Recusa do destinatário em receber a notificação
+          </label>
+        </div>
+      </fieldset>
     </fieldset>
 
     <fieldset>
@@ -88,15 +116,73 @@ body {
 <script>
 let pdfDoc = null;
 let originalFileName = "arquivo.pdf";
+const CONFIG = {
+  margins: { left: 41, right: 41, top: 140, bottom: 49 },
+  fontSize: { title: 12, label: 11, minLabel: 7 },
+  spacing: { label: 12 },
+  maxRectHeight: 198.45, // 7 cm
+  extraRectWidth: 22.68, // 0,8 cm
+  headerGap: 12.17
+};
 
+// ---------- Funções auxiliares ----------
 function showMessage(msg) {
   const messageBox = document.getElementById("messageBox");
   messageBox.textContent = msg;
   messageBox.style.display = "block";
   setTimeout(() => messageBox.style.display = "none", 4000);
 }
+function splitTextIntoLines(text, font, fontSize, maxWidth) {
+  if (!text) return [];
+  text = text.replace(/\n/g,' ');
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+  for (const w of words) {
+    const testLine = currentLine ? currentLine + ' ' + w : w;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    if (width > maxWidth) {
+      if (currentLine) lines.push(currentLine);
+      currentLine = w;
+    } else currentLine = testLine;
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegular, fontSizeLabel) {
+  if(totalLines.length === 0) return;
+  let fontSize = fontSizeLabel;
+  while(fontSize >= CONFIG.fontSize.minLabel){
+    let totalHeight = totalLines.reduce((acc,item)=> acc + item.lines.length*CONFIG.spacing.label + CONFIG.spacing.label/2, 0) + CONFIG.headerGap;
+    if(totalHeight <= rectHeight) break;
+    fontSize -= 0.5;
+  }
+  let y = yTop - CONFIG.headerGap;
+  totalLines.forEach(item => {
+    page.drawText(item.label, {x: x+12, y: y, size: fontSize, font: fontBold});
+    item.lines.forEach(line=>{
+      page.drawText(line, {x: x+12+item.labelWidth+5, y: y, size: fontSize, font: fontRegular});
+      y -= CONFIG.spacing.label;
+    });
+    y -= CONFIG.spacing.label/2;
+  });
+}
 
-// Upload PDF
+// ---------- Máscara para telefone ----------
+const telefoneInput = document.getElementById("telefone");
+telefoneInput.addEventListener("input", (e)=>{
+  let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
+  let formattedValues = values.map(v=>{
+    let formatted = '';
+    if(v.length > 0) formatted += '(' + v.slice(0,2);
+    if(v.length >= 3) formatted += ') ' + v.slice(2,7);
+    if(v.length >= 8) formatted += '-' + v.slice(7);
+    return formatted;
+  });
+  e.target.value = formattedValues.join('; ');
+});
+
+// ---------- Upload PDF base ----------
 document.getElementById("fileInput").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -105,138 +191,124 @@ document.getElementById("fileInput").addEventListener("change", async e => {
   pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
 });
 
-// Upload Imagens
+// ---------- Adicionar imagens ----------
 document.getElementById("addImageBtn").addEventListener("click", () => {
   const container = document.getElementById("imgUploadsContainer");
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
   input.className = "imgUpload";
-  input.style.display = "none";
   container.appendChild(input);
-
-  const row = document.createElement("div");
-  row.style.display = "flex";
-  row.style.alignItems = "center";
-  row.style.gap = "8px";
-  row.style.marginTop = "8px";
-
-  const thumb = document.createElement("div");
-  thumb.style.width = "72px";
-  thumb.style.height = "60px";
-  thumb.style.overflow = "hidden";
-  thumb.style.display = "flex";
-  thumb.style.alignItems = "center";
-  thumb.style.justifyContent = "center";
-
-  const nameSpan = document.createElement("span");
-  nameSpan.textContent = "Nenhum arquivo selecionado";
-  nameSpan.style.flex = "1";
-  nameSpan.style.fontSize = "0.95rem";
-  nameSpan.style.wordBreak = "break-word";
-
-  const chooseBtn = document.createElement("button");
-  chooseBtn.type = "button";
-  chooseBtn.textContent = "Escolher";
-
-  const removeBtn = document.createElement("button");
-  removeBtn.type = "button";
-  removeBtn.textContent = "Remover";
-
-  row.appendChild(thumb);
-  row.appendChild(nameSpan);
-  row.appendChild(chooseBtn);
-  row.appendChild(removeBtn);
-  container.appendChild(row);
-
-  chooseBtn.addEventListener("click", ()=>input.click());
-  removeBtn.addEventListener("click", ()=>{ input.remove(); row.remove(); });
-  input.addEventListener("change", ()=>{
-    if(!input.files.length){ nameSpan.textContent="Nenhum arquivo selecionado"; thumb.innerHTML=""; return;}
-    const file = input.files[0];
-    nameSpan.textContent = file.name;
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      thumb.innerHTML="";
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.style.maxWidth="100%";
-      img.style.maxHeight="100%";
-      img.style.objectFit="cover";
-      thumb.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-  input.click();
 });
 
-// === Redimensionar para DUAS por página ===
-async function drawImagesTwoPerPage(pdfLibDoc) {
-  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(i => i.files.length);
+// ---------- Desenhar imagens ----------
+async function drawImagesOnPages(pdfLibDoc) {
+  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
   if (!uploads.length) return;
+  const pageWidth = pdfLibDoc.getPages()[0].getWidth();
+  const pageHeight = pdfLibDoc.getPages()[0].getHeight();
+  const maxWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
+  const maxHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
 
-  const pages = pdfLibDoc.getPages();
-  const firstPage = pages[0];
-  const pageWidth = firstPage.getWidth();
-  const pageHeight = firstPage.getHeight();
+  let currentPage = pdfLibDoc.getPages().length > 1 ? pdfLibDoc.getPages()[1] : pdfLibDoc.addPage();
+  let yCursor = pageHeight - CONFIG.margins.top;
 
-  const usableWidth = pageWidth - 80;
-  const maxImagesPerPage = 2;
-  const imagesPerPageHeight = pageHeight - 160; // margem superior/inferior
+  for (let i = 0; i < uploads.length; i += 2) { 
+    const images = uploads.slice(i, i+2);
+    const pdfImgs = [];
 
-  let currentPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
-  let cursorY = pageHeight - 80;
-  let imageCount = 0;
-
-  for (const upload of uploads) {
-    const file = upload.files[0];
-    const bytes = await file.arrayBuffer();
-    const img = file.type === "image/png" ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
-    const dims = img.scale(1);
-
-    const scale = Math.min(usableWidth / dims.width, 1);
-    let imgWidth = dims.width * scale;
-    let imgHeight = dims.height * scale;
-
-    // Se for mais alto do que metade da página útil, ajusta
-    const maxHeightPerImage = imagesPerPageHeight / maxImagesPerPage;
-    if (imgHeight > maxHeightPerImage) {
-      const fitScale = maxHeightPerImage / imgHeight;
-      imgWidth *= fitScale;
-      imgHeight *= fitScale;
+    for (const input of images) {
+      const file = input.files[0];
+      const bytes = await file.arrayBuffer();
+      const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+      pdfImgs.push({ pdfImg: img, dims: img.scale(1) });
     }
 
-    const x = (pageWidth - imgWidth) / 2;
-    const y = cursorY - imgHeight;
+    const totalHeight = pdfImgs.reduce((acc,img)=> acc + img.dims.height, 0);
+    const scale = Math.min(maxWidth / Math.max(...pdfImgs.map(i=>i.dims.width)), maxHeight / totalHeight);
 
-    currentPage.drawRectangle({ x, y, width: imgWidth, height: imgHeight, color: PDFLib.rgb(1,1,1) });
-    currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
+    const fundoAltura = pdfImgs.reduce((acc,img)=> acc + img.dims.height * scale, 0);
+    currentPage.drawRectangle({
+      x: CONFIG.margins.left,
+      y: yCursor - fundoAltura,
+      width: maxWidth,
+      height: fundoAltura,
+      color: PDFLib.rgb(1,1,1)
+    });
 
-    cursorY = y - 40;
-    imageCount++;
+    let y = yCursor;
+    for (const img of pdfImgs) {
+      img.width = img.dims.width * scale;
+      img.height = img.dims.height * scale;
+      const x = (pageWidth - img.width)/2;
+      y -= img.height;
+      currentPage.drawImage(img.pdfImg, { x, y, width: img.width, height: img.height });
+    }
 
-    if (imageCount % 2 === 0 && upload !== uploads[uploads.length - 1]) {
-      currentPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
-      cursorY = pageHeight - 80;
+    if (uploads.length > i+2) {
+      currentPage = pdfLibDoc.addPage();
+      yCursor = pageHeight - CONFIG.margins.top;
     }
   }
 }
 
+// ---------- Gerar PDF final ----------
 async function gerarPdfFinal(){
   if(!pdfDoc) throw new Error("Carregue primeiro o PDF base.");
+  const fields = [
+    {label:"Telefone(s):", value: document.getElementById("telefone").value},
+    {label:"Nome(s):", value: document.getElementById("nomeContato").value},
+    {label:"Endereço:", value: document.getElementById("endereco").value},
+    {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
+  ];
+  const filledFields = fields.filter(f => f.value && f.value.trim()!=='');
+
   const pdfBytes = await pdfDoc.getData();
   const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
-  await drawImagesTwoPerPage(pdfLibDoc);
+  if(pdfLibDoc.getPages().length>2){
+    for(let i=pdfLibDoc.getPages().length-1;i>=2;i--) pdfLibDoc.removePage(i);
+  }
+
+  const fontBold = await pdfLibDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const fontRegular = await pdfLibDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  const firstPage = pdfLibDoc.getPages()[0];
+  let secondPage = pdfLibDoc.getPages().length>1? pdfLibDoc.getPages()[1] : pdfLibDoc.addPage();
+  const { width } = firstPage.getSize();
+
+  const totalLines = filledFields.map(f=>{
+    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
+    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
+    return {label:f.label, labelWidth, lines};
+  });
+
+  const rectHeight = CONFIG.maxRectHeight;
+  const rectWidth = width - 100 + CONFIG.extraRectWidth;
+  const rectX = (width - rectWidth)/2;
+  const rectY = CONFIG.margins.bottom;
+  firstPage.drawRectangle({x:rectX, y:rectY, width:rectWidth, height:rectHeight, borderColor:PDFLib.rgb(0,0,0), borderWidth:1, color:PDFLib.rgb(1,1,1), borderRadius:8});
+
+  const title = "DIVISÃO DE ENTREGA DE NOTIFICAÇÕES – OFICIAIS";
+  const fontSizeTitle = CONFIG.fontSize.title;
+  const textWidth = fontBold.widthOfTextAtSize(title,fontSizeTitle);
+  const textX = rectX + (rectWidth-textWidth)/2;
+  const textY = rectY + rectHeight - fontSizeTitle - 10;
+  firstPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
+
+  drawTextBlock(firstPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
+
+  await drawImagesOnPages(pdfLibDoc);
   return pdfLibDoc.save();
 }
 
-// Botões
+// ---------- Botões ----------
 document.getElementById("previewBtn").addEventListener("click", async ()=>{
   try{
     const newPdfBytes = await gerarPdfFinal();
     const blob = new Blob([newPdfBytes], {type:"application/pdf"});
     const url = URL.createObjectURL(blob);
-    document.getElementById("previewFrame").src = url;
+    const frame = document.getElementById("previewFrame");
+    frame.src = url;
+    frame.onload = ()=>URL.revokeObjectURL(url);
   }catch(err){ showMessage("Erro: "+err.message); }
 });
 
@@ -255,13 +327,25 @@ document.getElementById("downloadBtn").addEventListener("click", async ()=>{
 });
 
 document.getElementById("clearBtn").addEventListener("click", ()=>{
-  document.getElementById("telefone").value = "";
-  document.getElementById("nomeContato").value = "";
-  document.getElementById("endereco").value = "";
-  document.getElementById("ocorrencia").value = "";
-  document.getElementById("imgUploadsContainer").innerHTML = "";
-  document.getElementById("previewFrame").src = "";
-  showMessage("Formulário limpo com sucesso!");
+  ["telefone","nomeContato","endereco","ocorrencia"].forEach(id => document.getElementById(id).value='');
+  document.querySelectorAll(".presetPhrase").forEach(cb => cb.checked=false);
+  document.querySelectorAll(".imgUpload").forEach(i=>i.remove());
+  document.getElementById("fileInput").value='';
+  pdfDoc = null;
+  document.getElementById("previewFrame").src = '';
+});
+
+// ---------- Frases predefinidas ----------
+const checkboxes = document.querySelectorAll(".presetPhrase");
+const ocorrenciaField = document.getElementById("ocorrencia");
+checkboxes.forEach(cb=>{
+  cb.addEventListener("change", ()=>{
+    const lines = ocorrenciaField.value ? ocorrenciaField.value.split(' ') : [];
+    const text = cb.dataset.text;
+    if(cb.checked) lines.push(text);
+    else { const i=lines.indexOf(text); if(i>=0) lines.splice(i,1); }
+    ocorrenciaField.value = lines.join(' ');
+  });
 });
 </script>
 </body>
