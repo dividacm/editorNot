@@ -303,6 +303,39 @@ async function gerarPdfFinal(){
   const rectX = (width - rectWidth)/2;
   const rectY = CONFIG.margins.bottom;
   firstPage.drawRectangle({x:rectX, y:rectY, width:rectWidth, height:rectHeight, borderColor:PDFLib.rgb(0,0,0), borderWidth:1, color:PDFLib.rgb(1,1,1), borderRadius:8});
+  
+   // Buscar posição da frase alvo
+  const pos = await findTextPosition(pdfDoc, "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB");
+  let targetPage = pdfLibDoc.getPages()[pos ? pos.page : 0];
+  const { width, height } = targetPage.getSize();
+
+  const totalLines = filledFields.map(f=>{
+    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
+    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
+    return {label:f.label, labelWidth, lines};
+  });
+
+  const rectHeight = CONFIG.maxRectHeight;
+  const rectWidth = width - 100 + CONFIG.extraRectWidth;
+  let rectX, rectY;
+  if (pos) {
+    rectX = CONFIG.margins.left; // alinhado à margem
+    rectY = pos.y - rectHeight - 15; // quadro logo abaixo da frase
+  } else {
+    rectX = 50; 
+    rectY = 100; // fallback
+  }
+
+  targetPage.drawRectangle({
+    x:rectX, 
+    y:rectY, 
+    width:rectWidth, 
+    height:rectHeight, 
+    borderColor:PDFLib.rgb(0,0,0), 
+    borderWidth:1, 
+    color:PDFLib.rgb(1,1,1), 
+    borderRadius:8
+  });
 
   const title = "DIVISÃO DE ENTREGA DE NOTIFICAÇÕES – OFICIAIS";
   const fontSizeTitle = CONFIG.fontSize.title;
@@ -367,4 +400,5 @@ checkboxes.forEach(cb=>{
 </script>
 </body>
 </html>
+
 
