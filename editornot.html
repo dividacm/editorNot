@@ -181,6 +181,23 @@ telefoneInput.addEventListener("input", (e)=>{
   });
   e.target.value = formattedValues.join('; ');
 });
+  
+  // ---------- Função para localizar frase ----------
+async function findTextPosition(pdf, searchText) {
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    for (let item of textContent.items) {
+      if (item.str && item.str.toLowerCase().includes(searchText.toLowerCase())) {
+        const tx = item.transform[4];
+        const ty = item.transform[5];
+        const fontHeight = item.transform[3];
+        return { page: pageNum - 1, x: tx, y: ty, height: fontHeight };
+      }
+    }
+  }
+  return null;
+}
 
 // ---------- Upload PDF base ----------
 document.getElementById("fileInput").addEventListener("change", async e => {
@@ -350,3 +367,4 @@ checkboxes.forEach(cb=>{
 </script>
 </body>
 </html>
+
