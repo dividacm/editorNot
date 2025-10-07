@@ -161,7 +161,8 @@ function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegu
     y -= CONFIG.spacing.label/2;
   });
 }
-// ---------- Máscara para telefone ----------
+
+// ---------- Máscara telefone ----------
 const telefoneInput = document.getElementById("telefone");
 telefoneInput.addEventListener("input", (e)=>{
   let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
@@ -174,8 +175,8 @@ telefoneInput.addEventListener("input", (e)=>{
   });
   e.target.value = formattedValues.join('; ');
 });
-  
-// ---------- Função para localizar frase ----------
+
+// ---------- Localizar texto ----------
 async function findTextPosition(pdf, searchText) {
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
@@ -192,7 +193,7 @@ async function findTextPosition(pdf, searchText) {
   return null;
 }
 
-// ---------- Upload PDF base ----------
+// ---------- Upload PDF ----------
 document.getElementById("fileInput").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -201,33 +202,30 @@ document.getElementById("fileInput").addEventListener("change", async e => {
   pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
 });
 
-// ---------- Adicionar imagens (corrigido: abre o diálogo e mostra preview/remover) ----------
+// ---------- Adicionar imagens (corrigido) ----------
 document.getElementById("addImageBtn").addEventListener("click", () => {
   const container = document.getElementById("imgUploadsContainer");
-
-  // input escondido que receberá o arquivo
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
   input.className = "imgUpload";
-  input.style.display = "none"; // mantemos escondido, mostraremos um row amigável
+  input.style.display = "none";
   container.appendChild(input);
 
-  // linha de controle visível (nome, escolher, remover)
-  const fileRow = document.createElement("div");
-  fileRow.className = "imgRow";
-  fileRow.style.display = "flex";
-  fileRow.style.alignItems = "center";
-  fileRow.style.gap = "8px";
-  fileRow.style.marginTop = "8px";
+  const row = document.createElement("div");
+  row.className = "imgRow";
+  row.style.display = "flex";
+  row.style.alignItems = "center";
+  row.style.gap = "8px";
+  row.style.marginTop = "8px";
 
-  const thumbHolder = document.createElement("div"); // lugar para miniatura
-  thumbHolder.style.width = "72px";
-  thumbHolder.style.height = "60px";
-  thumbHolder.style.overflow = "hidden";
-  thumbHolder.style.display = "flex";
-  thumbHolder.style.alignItems = "center";
-  thumbHolder.style.justifyContent = "center";
+  const thumb = document.createElement("div");
+  thumb.style.width = "72px";
+  thumb.style.height = "60px";
+  thumb.style.overflow = "hidden";
+  thumb.style.display = "flex";
+  thumb.style.alignItems = "center";
+  thumb.style.justifyContent = "center";
 
   const nameSpan = document.createElement("span");
   nameSpan.textContent = "Nenhum arquivo selecionado";
@@ -238,147 +236,88 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   const chooseBtn = document.createElement("button");
   chooseBtn.type = "button";
   chooseBtn.textContent = "Escolher";
-  chooseBtn.style.padding = "5px 8px";
 
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.textContent = "Remover";
-  removeBtn.style.padding = "5px 8px";
 
-  fileRow.appendChild(thumbHolder);
-  fileRow.appendChild(nameSpan);
-  fileRow.appendChild(chooseBtn);
-  fileRow.appendChild(removeBtn);
-  container.appendChild(fileRow);
+  row.appendChild(thumb);
+  row.appendChild(nameSpan);
+  row.appendChild(chooseBtn);
+  row.appendChild(removeBtn);
+  container.appendChild(row);
 
-  // abrir o diálogo quando clicar no botão (ou imediatamente ao criar)
-  chooseBtn.addEventListener("click", () => input.click());
-
-  // permitir remover a linha e o input
-  removeBtn.addEventListener("click", () => {
-    input.remove();
-    fileRow.remove();
-  });
-
-  // quando o usuário escolher o arquivo
-  input.addEventListener("change", () => {
-    if (!input.files || input.files.length === 0) {
-      nameSpan.textContent = "Nenhum arquivo selecionado";
-      thumbHolder.innerHTML = "";
-      return;
-    }
+  chooseBtn.addEventListener("click", ()=>input.click());
+  removeBtn.addEventListener("click", ()=>{ input.remove(); row.remove(); });
+  input.addEventListener("change", ()=>{
+    if(!input.files.length){ nameSpan.textContent="Nenhum arquivo selecionado"; thumb.innerHTML=""; return;}
     const file = input.files[0];
     nameSpan.textContent = file.name;
-
-    // gerar miniatura
     const reader = new FileReader();
-    reader.onload = (e) => {
-      thumbHolder.innerHTML = "";
-      const imgEl = document.createElement("img");
-      imgEl.src = e.target.result;
-      imgEl.style.maxWidth = "100%";
-      imgEl.style.maxHeight = "100%";
-      imgEl.style.objectFit = "cover";
-      thumbHolder.appendChild(imgEl);
+    reader.onload = (e)=>{
+      thumb.innerHTML="";
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.style.maxWidth="100%";
+      img.style.maxHeight="100%";
+      img.style.objectFit="cover";
+      thumb.appendChild(img);
     };
     reader.readAsDataURL(file);
   });
-
-  // abre imediatamente o diálogo (UX esperada)
   input.click();
 });
 
-// ---------- Ajuste no Limpar para remover também as linhas visíveis ----------
-document.getElementById("clearBtn").addEventListener("click", ()=> {
-  ["telefone","nomeContato","endereco","ocorrencia"].forEach(id => document.getElementById(id).value='');
-  document.querySelectorAll(".presetPhrase").forEach(cb => cb.checked=false);
-  // remove inputs e linhas visíveis
-  document.querySelectorAll(".imgUpload").forEach(i=>i.remove());
-  document.querySelectorAll(".imgRow").forEach(r=>r.remove());
-  document.getElementById("fileInput").value='';
-  pdfDoc = null;
-  document.getElementById("previewFrame").src = '';
-});
-
-// ---------- Desenhar imagens (uma embaixo da outra, redimensionadas) ----------
+// ---------- Desenhar imagens (uma embaixo da outra) ----------
 async function drawImagesOnPages(pdfLibDoc, targetPageIndex) {
-  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
+  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(i => i.files.length);
   if (!uploads.length) return;
-
   const pages = pdfLibDoc.getPages();
   const pageWidth = pages[0].getWidth();
   const pageHeight = pages[0].getHeight();
-
   const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
   const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
-
   let currentPageIndex = targetPageIndex + 1;
   let currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
-  let cursorY = pageHeight - CONFIG.margins.top; // posição inicial no topo da área útil
+  let cursorY = pageHeight - CONFIG.margins.top;
 
   for (const upload of uploads) {
     const file = upload.files[0];
     const bytes = await file.arrayBuffer();
-    const img = file.type === "image/png"
-      ? await pdfLibDoc.embedPng(bytes)
-      : await pdfLibDoc.embedJpg(bytes);
+    const img = file.type === "image/png" ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
     const dims = img.scale(1);
 
-    // Escala para caber na largura útil
     const scale = Math.min(usableWidth / dims.width, 1);
     let imgWidth = dims.width * scale;
     let imgHeight = dims.height * scale;
-
-    // Se a imagem for muito alta para caber, reduz proporcionalmente
     if (imgHeight > usableHeight) {
       const fitScale = usableHeight / imgHeight;
       imgWidth *= fitScale;
       imgHeight *= fitScale;
     }
-
-    // Se não couber mais na página atual, cria nova
     if (cursorY - imgHeight < CONFIG.margins.bottom) {
       currentPageIndex++;
       currentPage = pages[currentPageIndex] || pdfLibDoc.addPage([pageWidth, pageHeight]);
       cursorY = pageHeight - CONFIG.margins.top;
     }
 
-    // Fundo branco da imagem
     currentPage.drawRectangle({
       x: CONFIG.margins.left,
       y: cursorY - imgHeight,
       width: usableWidth,
       height: imgHeight,
-      color: PDFLib.rgb(1, 1, 1),
-      opacity: 1
+      color: PDFLib.rgb(1, 1, 1)
     });
 
-    // Centraliza horizontalmente
     const x = (pageWidth - imgWidth) / 2;
     const y = cursorY - imgHeight;
-
-    // Desenha imagem
     currentPage.drawImage(img, { x, y, width: imgWidth, height: imgHeight });
-
-    // Move o cursor para baixo com espaçamento
     cursorY = y - 10;
   }
 
-  // Remove páginas extras após a última usada
   const totalPages = pdfLibDoc.getPages().length;
-  for (let i = totalPages - 1; i > currentPageIndex; i--) {
-    pdfLibDoc.removePage(i);
-  }
+  for (let i = totalPages - 1; i > currentPageIndex; i--) pdfLibDoc.removePage(i);
 }
-
-
-  // remove todas as páginas depois da última imagem
-  const totalPages = pdfLibDoc.getPages().length;
-  for (let i = totalPages - 1; i > currentPageIndex; i--) {
-    pdfLibDoc.removePage(i);
-  }
-}
-
 
 // ---------- Gerar PDF final ----------
 async function gerarPdfFinal(){
@@ -389,56 +328,31 @@ async function gerarPdfFinal(){
     {label:"Endereço:", value: document.getElementById("endereco").value},
     {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
   ];
-  const filledFields = fields.filter(f => f.value && f.value.trim()!=='');
-
+  const filled = fields.filter(f => f.value.trim()!=='');
   const pdfBytes = await pdfDoc.getData();
   const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
-
   const fontBold = await pdfLibDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
   const fontRegular = await pdfLibDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-  // Buscar posição da frase alvo
   const pos = await findTextPosition(pdfDoc, "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB");
   let targetPage = pdfLibDoc.getPages()[pos ? pos.page : 0];
   const { width, height } = targetPage.getSize();
-
-  const totalLines = filledFields.map(f=>{
+  const totalLines = filled.map(f=>{
     const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
     const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
     return {label:f.label, labelWidth, lines};
   });
-
   const rectHeight = CONFIG.maxRectHeight;
   const rectWidth = width - 100 + CONFIG.extraRectWidth;
-  let rectX, rectY;
-  if (pos) {
-    rectX = CONFIG.margins.left;
-    rectY = pos.y - rectHeight - 15;
-  } else {
-    rectX = 50;
-    rectY = 100;
-  }
+  let rectX = CONFIG.margins.left;
+  let rectY = pos ? pos.y - rectHeight - 15 : 100;
 
-  targetPage.drawRectangle({
-    x:rectX, 
-    y:rectY, 
-    width:rectWidth, 
-    height:rectHeight, 
-    borderColor:PDFLib.rgb(0,0,0), 
-    borderWidth:1, 
-    color:PDFLib.rgb(1,1,1), 
-    borderRadius:8
-  });
-
+  targetPage.drawRectangle({x:rectX,y:rectY,width:rectWidth,height:rectHeight,borderColor:PDFLib.rgb(0,0,0),borderWidth:1,color:PDFLib.rgb(1,1,1)});
   const title = "DIVISÃO DE ENTREGA DE NOTIFICAÇÕES – OFICIAIS";
-  const fontSizeTitle = CONFIG.fontSize.title;
-  const textWidth = fontBold.widthOfTextAtSize(title,fontSizeTitle);
+  const textWidth = fontBold.widthOfTextAtSize(title,CONFIG.fontSize.title);
   const textX = rectX + (rectWidth-textWidth)/2;
-  const textY = rectY + rectHeight - fontSizeTitle - 10;
-  targetPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
-
-  drawTextBlock(targetPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
-
+  const textY = rectY + rectHeight - CONFIG.fontSize.title - 10;
+  targetPage.drawText(title,{x:textX,y:textY,size:CONFIG.fontSize.title,font:fontBold});
+  drawTextBlock(targetPage, rectX, textY - 15, rectHeight - CONFIG.fontSize.title - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
   await drawImagesOnPages(pdfLibDoc, pos ? pos.page : 0);
   return pdfLibDoc.save();
 }
@@ -449,56 +363,28 @@ document.getElementById("previewBtn").addEventListener("click", async ()=>{
     const newPdfBytes = await gerarPdfFinal();
     const blob = new Blob([newPdfBytes], {type:"application/pdf"});
     const url = URL.createObjectURL(blob);
-    const frame = document.getElementById("previewFrame");
-    frame.src = url;
-    frame.onload = ()=>URL.revokeObjectURL(url);
+    document.getElementById("previewFrame").src = url;
   }catch(err){ showMessage("Erro: "+err.message); }
 });
-
 document.getElementById("downloadBtn").addEventListener("click", async ()=>{
   try{
     const newPdfBytes = await gerarPdfFinal();
-    const handle = await window.showSaveFilePicker({
-      suggestedName: originalFileName,
-      types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
-    });
-    const writable = await handle.createWritable();
-    await writable.write(newPdfBytes);
-    await writable.close();
-    showMessage("PDF salvo com sucesso!");
+    const blob = new Blob([newPdfBytes], {type:"application/pdf"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "EDITADO_" + originalFileName;
+    a.click();
   }catch(err){ showMessage("Erro: "+err.message); }
 });
-
 document.getElementById("clearBtn").addEventListener("click", ()=>{
-  ["telefone","nomeContato","endereco","ocorrencia"].forEach(id => document.getElementById(id).value='');
-  document.querySelectorAll(".presetPhrase").forEach(cb => cb.checked=false);
-  document.querySelectorAll(".imgUpload").forEach(i=>i.remove());
-  document.getElementById("fileInput").value='';
-  pdfDoc = null;
-  document.getElementById("previewFrame").src = '';
-});
-
-// ---------- Frases predefinidas ----------
-const checkboxes = document.querySelectorAll(".presetPhrase");
-const ocorrenciaField = document.getElementById("ocorrencia");
-checkboxes.forEach(cb=>{
-  cb.addEventListener("change", ()=>{
-    const lines = ocorrenciaField.value ? ocorrenciaField.value.split(' ') : [];
-    const text = cb.dataset.text;
-    if(cb.checked) lines.push(text);
-    else { const i=lines.indexOf(text); if(i>=0) lines.splice(i,1); }
-    ocorrenciaField.value = lines.join(' ');
-  });
+  document.getElementById("telefone").value = "";
+  document.getElementById("nomeContato").value = "";
+  document.getElementById("endereco").value = "";
+  document.getElementById("ocorrencia").value = "";
+  document.getElementById("imgUploadsContainer").innerHTML = "";
+  document.getElementById("previewFrame").src = "";
+  showMessage("Formulário limpo com sucesso!");
 });
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
