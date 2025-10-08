@@ -31,7 +31,7 @@ body {
 }
 .form-container input[type="tel"] { font-family: monospace; }
 .form-container button {
-  padding: 8px 13px; border: none; background: var(--primary-color); color: #d3d3d3;
+  padding: 8px 13px; border: none; background: var(--primary-color); color: #fff;
   border-radius: 5px; cursor: pointer; transition: background 0.2s ease; font-size: 10pt;
 }
 .form-container button:hover { background: var(--primary-hover); }
@@ -61,19 +61,19 @@ body {
         <legend>Frases Predefinidas</legend>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com onde foi enviada a notificação. Comprovante em anexo.">
+            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp, onde foi enviada a notificação. Comprovante em anexo.">
             Contato realizado via WhatsApp com notificação enviada
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Foram feitas três tentativa de entrega nos dias , após deixada notificação. Comprovante em anexo.">
+            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Foram feitas três tentativas de entrega nos dias indicados, após deixada notificação. Comprovante em anexo.">
             Cadastro incompleto, tentativas de entrega
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Realizada tentativa de contato via WhatsApp sem retorno, não encontrado contribuinte no endereço indicado, sem endereço de correspondência, impossibilitando entrega da notificação. Comprovante em anexo">
+            <input type="checkbox" class="presetPhrase" data-text="Entrega realizada com sucesso. Comprovante em anexo.">
             Entrega realizada com sucesso
           </label>
         </div>
@@ -115,6 +115,7 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 <script>
 let pdfDoc = null;
+let pdfArrayBuffer = null;
 let originalFileName = "arquivo.pdf";
 const CONFIG = {
   margins: { left: 41, right: 41, top: 140, bottom: 49 },
@@ -132,6 +133,7 @@ function showMessage(msg) {
   messageBox.style.display = "block";
   setTimeout(() => messageBox.style.display = "none", 4000);
 }
+
 function splitTextIntoLines(text, font, fontSize, maxWidth) {
   if (!text) return [];
   text = text.replace(/\n/g,' ');
@@ -149,6 +151,7 @@ function splitTextIntoLines(text, font, fontSize, maxWidth) {
   if (currentLine) lines.push(currentLine);
   return lines;
 }
+
 function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegular, fontSizeLabel) {
   if(totalLines.length === 0) return;
   let fontSize = fontSizeLabel;
@@ -168,7 +171,7 @@ function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegu
   });
 }
 
-// ---------- Máscara para telefone ----------
+// ---------- Máscara telefone ----------
 const telefoneInput = document.getElementById("telefone");
 telefoneInput.addEventListener("input", (e)=>{
   let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
@@ -181,8 +184,8 @@ telefoneInput.addEventListener("input", (e)=>{
   });
   e.target.value = formattedValues.join('; ');
 });
-  
-  // ---------- Função para localizar frase ----------
+
+// ---------- Localizar frase ----------
 async function findTextPosition(pdf, searchText) {
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
@@ -204,8 +207,8 @@ document.getElementById("fileInput").addEventListener("change", async e => {
   const file = e.target.files[0];
   if (!file) return;
   originalFileName = file.name;
-  const arrayBuffer = await file.arrayBuffer();
-  pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  pdfArrayBuffer = await file.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({data: pdfArrayBuffer}).promise;
 });
 
 // ---------- Adicionar imagens ----------
@@ -269,9 +272,9 @@ async function drawImagesOnPages(pdfLibDoc) {
   }
 }
 
-// ---------- Gerar PDF final ----------
+// ---------- Gerar PDF ----------
 async function gerarPdfFinal(){
-  if(!pdfDoc) throw new Error("Carregue primeiro o PDF base.");
+  if(!pdfDoc || !pdfArrayBuffer) throw new Error("Carregue primeiro o PDF base.");
   const fields = [
     {label:"Telefone(s):", value: document.getElementById("telefone").value},
     {label:"Nome(s):", value: document.getElementById("nomeContato").value},
@@ -280,50 +283,33 @@ async function gerarPdfFinal(){
   ];
   const filledFields = fields.filter(f => f.value && f.value.trim()!=='');
 
-  const pdfBytes = await pdfDoc.getData();
-  const pdfLibDoc = await PDFLib.PDFDocument.load(pdfBytes);
+  const pdfLibDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
   if(pdfLibDoc.getPages().length>2){
     for(let i=pdfLibDoc.getPages().length-1;i>=2;i--) pdfLibDoc.removePage(i);
   }
 
   const fontBold = await pdfLibDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
   const fontRegular = await pdfLibDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-  const firstPage = pdfLibDoc.getPages()[0];
-  let secondPage = pdfLibDoc.getPages().length>1? pdfLibDoc.getPages()[1] : pdfLibDoc.addPage();
-  const { width } = firstPage.getSize();
 
-  const totalLines = filledFields.map(f=>{
-    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
-    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
-    return {label:f.label, labelWidth, lines};
-  });
-
-  const rectHeight = CONFIG.maxRectHeight;
-  const rectWidth = width - 100 + CONFIG.extraRectWidth;
-  const rectX = (width - rectWidth)/2;
-  const rectY = CONFIG.margins.bottom;
-  firstPage.drawRectangle({x:rectX, y:rectY, width:rectWidth, height:rectHeight, borderColor:PDFLib.rgb(0,0,0), borderWidth:1, color:PDFLib.rgb(1,1,1), borderRadius:8});
-  
-   // Buscar posição da frase alvo
   const pos = await findTextPosition(pdfDoc, "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB");
   let targetPage = pdfLibDoc.getPages()[pos ? pos.page : 0];
-  const { width, height } = targetPage.getSize();
+  const { width: targetWidth, height: targetHeight } = targetPage.getSize();
 
   const totalLines = filledFields.map(f=>{
     const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
-    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, width-100-24-labelWidth);
+    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.label, targetWidth-100-24-labelWidth);
     return {label:f.label, labelWidth, lines};
   });
 
   const rectHeight = CONFIG.maxRectHeight;
-  const rectWidth = width - 100 + CONFIG.extraRectWidth;
+  const rectWidth = targetWidth - 100 + CONFIG.extraRectWidth;
   let rectX, rectY;
   if (pos) {
-    rectX = CONFIG.margins.left; // alinhado à margem
-    rectY = pos.y - rectHeight - 15; // quadro logo abaixo da frase
+    rectX = CONFIG.margins.left;
+    rectY = pos.y - rectHeight - 15;
   } else {
     rectX = 50; 
-    rectY = 100; // fallback
+    rectY = 100;
   }
 
   targetPage.drawRectangle({
@@ -342,9 +328,9 @@ async function gerarPdfFinal(){
   const textWidth = fontBold.widthOfTextAtSize(title,fontSizeTitle);
   const textX = rectX + (rectWidth-textWidth)/2;
   const textY = rectY + rectHeight - fontSizeTitle - 10;
-  firstPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
+  targetPage.drawText(title,{x:textX, y:textY, size:fontSizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
 
-  drawTextBlock(firstPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
+  drawTextBlock(targetPage, rectX, textY - 15, rectHeight - fontSizeTitle - 15, totalLines, fontBold, fontRegular, CONFIG.fontSize.label);
 
   await drawImagesOnPages(pdfLibDoc);
   return pdfLibDoc.save();
@@ -365,6 +351,16 @@ document.getElementById("previewBtn").addEventListener("click", async ()=>{
 document.getElementById("downloadBtn").addEventListener("click", async ()=>{
   try{
     const newPdfBytes = await gerarPdfFinal();
+
+    if (!window.showSaveFilePicker) {
+      const blob = new Blob([newPdfBytes], {type:"application/pdf"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = originalFileName;
+      a.click();
+      return;
+    }
+
     const handle = await window.showSaveFilePicker({
       suggestedName: originalFileName,
       types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
@@ -379,26 +375,21 @@ document.getElementById("downloadBtn").addEventListener("click", async ()=>{
 document.getElementById("clearBtn").addEventListener("click", ()=>{
   ["telefone","nomeContato","endereco","ocorrencia"].forEach(id => document.getElementById(id).value='');
   document.querySelectorAll(".presetPhrase").forEach(cb => cb.checked=false);
-  document.querySelectorAll(".imgUpload").forEach(i=>i.remove());
-  document.getElementById("fileInput").value='';
+  document.querySelectorAll(".imgUpload").forEach(i => i.remove());
   pdfDoc = null;
-  document.getElementById("previewFrame").src = '';
+  pdfArrayBuffer = null;
+  document.getElementById("fileInput").value='';
+  document.getElementById("previewFrame").src='';
 });
 
-// ---------- Frases predefinidas ----------
-const checkboxes = document.querySelectorAll(".presetPhrase");
-const ocorrenciaField = document.getElementById("ocorrencia");
-checkboxes.forEach(cb=>{
-  cb.addEventListener("change", ()=>{
-    const lines = ocorrenciaField.value ? ocorrenciaField.value.split(' ') : [];
-    const text = cb.dataset.text;
-    if(cb.checked) lines.push(text);
-    else { const i=lines.indexOf(text); if(i>=0) lines.splice(i,1); }
-    ocorrenciaField.value = lines.join(' ');
+// ---------- Frases automáticas ----------
+document.querySelectorAll('.presetPhrase').forEach(cb=>{
+  cb.addEventListener('change', ()=>{
+    const textArea = document.getElementById('ocorrencia');
+    let selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c=>c.dataset.text);
+    textArea.value = selected.join('\n');
   });
 });
 </script>
 </body>
 </html>
-
-
