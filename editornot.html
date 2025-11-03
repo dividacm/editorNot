@@ -61,20 +61,20 @@ body {
         <legend>Frases Predefinidas</legend>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp, onde foi enviada a notificação. Comprovante em anexo.">
+            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo.">
             Contato realizado via WhatsApp com notificação enviada
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Foram feitas três tentativas de entrega nos dias indicados, após deixada notificação. Comprovante em anexo.">
+            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo.">
             Cadastro incompleto, tentativas de entrega
           </label>
         </div>
         <div>
           <label>
-            <input type="checkbox" class="presetPhrase" data-text="Entrega realizada com sucesso. Comprovante em anexo.">
-            Entrega realizada com sucesso
+            <input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possivel localizar hereiro(a) ou atual proprietário. Comprovante em anexo.">
+            Terreno baldio
           </label>
         </div>
         <div>
@@ -105,8 +105,11 @@ body {
     <div class="button-row">
       <button id="previewBtn">Pré-visualizar PDF</button>
       <button id="downloadBtn">Baixar PDF Final</button>
-      <button id="clearBtn">Limpar</button>
     </div>
+    <fieldset>
+      <button id="clearBtn">Limpar</button>
+    </fieldset>
+    <div>
     <iframe id="previewFrame" title="Pré-visualização do PDF"></iframe>
   </div>
 </div>
@@ -393,3 +396,4 @@ document.querySelectorAll('.presetPhrase').forEach(cb=>{
 </script>
 </body>
 </html>
+
