@@ -82,6 +82,10 @@ body {
             <input type="checkbox" class="presetPhrase" data-text="Contribuinte se recusou a receber a notificação. Comprovante em anexo.">
             Recusa do destinatário em receber a notificação
           </label>
+           <label>
+            <input type="checkbox" class="presetPhrase" data-text="tentativa de contato via WhatsApp sem sucesso e não encontrada empresa/socio no endereço cadastrado. Não foi possível notificar.">
+            Empresa fechada
+          </label>
         </div>
       </fieldset>
     </fieldset>
@@ -231,6 +235,11 @@ async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
   const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
   const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
 
+  // Margem inferior ajustada para não ultrapassar 2cm do rodapé
+  const bottomLimit = CONFIG.margins.bottom + 56.7; 
+  const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
+  const usableHeight = pageHeight - CONFIG.margins.top - bottomLimit;
+
   let pageIndex = startPageIndex;
 
   for (let i = 0; i < uploads.length; i += 2) {
@@ -266,7 +275,6 @@ async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
   return pageIndex; // para controle de páginas usadas
 }
 
-// ---------- Gerar PDF ----------
 // ---------- Gerar PDF ----------
 async function gerarPdfFinal(){
   if(!pdfDoc || !pdfArrayBuffer) throw new Error("Carregue primeiro o PDF base.");
@@ -389,3 +397,4 @@ document.querySelectorAll('.presetPhrase').forEach(cb=>{
 </script>
 </body>
 </html>
+
