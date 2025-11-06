@@ -232,9 +232,7 @@ async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
 
   const pageWidth = pdfLibDoc.getPages()[0].getWidth();
   const pageHeight = pdfLibDoc.getPages()[0].getHeight();
-  const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
-  const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
-
+  
   // Margem inferior ajustada para não ultrapassar 2cm do rodapé
   const bottomLimit = CONFIG.margins.bottom + 56.7; 
   const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
@@ -243,28 +241,36 @@ async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
   let pageIndex = startPageIndex;
 
   for (let i = 0; i < uploads.length; i += 2) {
-    const images = uploads.slice(i, i+2);
+    const images = uploads.slice(i, i + 2);
     const currentPage = pdfLibDoc.getPages()[pageIndex] || pdfLibDoc.addPage();
     let yCursor = pageHeight - CONFIG.margins.top;
 
     // fundo branco na área útil
     currentPage.drawRectangle({
       x: CONFIG.margins.left,
-      y: CONFIG.margins.bottom,
+      y: bottomLimit,
       width: usableWidth,
       height: usableHeight,
-      color: PDFLib.rgb(1,1,1)
+      color: PDFLib.rgb(1, 1, 1)
     });
 
     for (const input of images) {
       const file = input.files[0];
       const bytes = await file.arrayBuffer();
       const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+
+      // ajustar escala para caber entre topo e limite inferior
       const scale = Math.min(usableWidth / img.width, usableHeight / img.height / images.length);
       const imgWidth = img.width * scale;
       const imgHeight = img.height * scale;
       const x = CONFIG.margins.left + (usableWidth - imgWidth) / 2;
+      
+      // verifica se a imagem ultrapassa o limite inferior
       yCursor -= imgHeight;
+      if (yCursor < bottomLimit) {
+        yCursor = bottomLimit;
+      }
+
       currentPage.drawImage(img, { x, y: yCursor, width: imgWidth, height: imgHeight });
       yCursor -= 10; // espaço entre imagens
     }
@@ -272,7 +278,7 @@ async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
     pageIndex++;
   }
 
-  return pageIndex; // para controle de páginas usadas
+  return pageIndex; // retorna índice da última página usada
 }
 
 // ---------- Gerar PDF ----------
@@ -397,4 +403,5 @@ document.querySelectorAll('.presetPhrase').forEach(cb=>{
 </script>
 </body>
 </html>
+
 
