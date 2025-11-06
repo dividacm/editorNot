@@ -1,3 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerar Notificação - Editor PDF</title>
+<style>
+:root {
+  --primary-color: #0077cc;
+  --primary-hover: #005fa3;
+  --bg-light: #f4f4f4;
+  --border-radius: 8px;
+  --font-family: Arial, sans-serif;
+}
+body {
+  font-family: var(--font-family);
+  background: var(--bg-light);
+  margin: 0;
+  padding: 20px;
+}
+#container { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.form-container {
+  background: #fff; padding: 13px; border-radius: var(--border-radius); max-width: 400px; flex-shrink: 0;
+}
+.form-container fieldset { border: 1px solid #333; border-radius: var(--border-radius); padding: 9px 13px; margin-bottom: 15px; }
+.form-container legend { font-weight: bold; padding: 0 5px; }
+.form-container label { display: block; margin-top: 5px; font-weight: normal; font-size: 10pt; }
+.form-container input, .form-container textarea {
+  width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;
+  font-size: 10pt; font-weight: normal; line-height: 1em;
+}
+.form-container input[type="tel"] { font-family: monospace; }
+.form-container button {
+  padding: 8px 13px; border: none; background: var(--primary-color); color: #fff;
+  border-radius: 5px; cursor: pointer; transition: background 0.2s ease; font-size: 10pt;
+}
+.form-container button:hover { background: var(--primary-hover); }
+.preview-container { flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; }
+#previewFrame { flex-grow: 1; min-height: 90vh; border: 1px solid #333; margin-top: 10px; }
+#messageBox { margin-top: 10px; padding: 8px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; font-size: 10pt; }
+#clearBtn { padding:8px 12px; font-size:10pt; border:none; border-radius:5px; background:#d3d3d3; cursor:pointer; }
+#clearBtn:hover { background:#b0b0b0; }
+.button-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="container">
+  <div class="form-container">
+    <fieldset>
+      <legend>Campos Editáveis</legend>
+      <label>Telefone(s) de Contato:</label>
+      <input type="tel" id="telefone" placeholder="(44) 99999-9999; (44) 98888-8888">
+      <label>Nome(s) para Contato:</label>
+      <input type="text" id="nomeContato" placeholder="Digite o nome">
+      <label>Endereço(s):</label>
+      <input type="text" id="endereco" placeholder="Rua, número, bairro">
+      <label>Ocorrências/Parecer:</label>
+      <textarea id="ocorrencia" rows="5" placeholder="Descreva a ocorrência..."></textarea>
+
+      <fieldset>
+        <legend>Frases Predefinidas</legend>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo.">
+            Contato realizado via WhatsApp com notificação enviada
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo.">
+            Cadastro incompleto, tentativas de entrega
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possivel localizar hereiro(a) ou atual proprietário. Comprovante em anexo.">
+            Terreno baldio
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" class="presetPhrase" data-text="Contribuinte se recusou a receber a notificação. Comprovante em anexo.">
+            Recusa do destinatário em receber a notificação
+          </label>
+        </div>
+      </fieldset>
+    </fieldset>
+
+    <fieldset>
+      <legend>Upload de Imagens</legend>
+      <div id="imgUploadsContainer"></div>
+      <button id="addImageBtn" type="button">Adicionar Imagem</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>PDF Base</legend>
+      <div class="toolbar">
+        <input type="file" id="fileInput" accept="application/pdf">
+      </div>
+      <div id="messageBox"></div>
+    </fieldset>
+  </div>
+
+  <div class="preview-container">
+    <div class="button-row">
+      <button id="previewBtn">Pré-visualizar PDF</button>
+      <button id="downloadBtn">Baixar PDF Final</button>
+      <button style="margin-left: auto; display: flex;" id="clearBtn">Limpar</button>
+    </div>
+    <iframe id="previewFrame" title="Pré-visualização do PDF"></iframe>
+  </div>
+</div>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<script>
+let pdfDoc = null;
+let pdfArrayBuffer = null;
+let originalFileName = "arquivo.pdf";
+
+const CONFIG = {
+  margins: { left: 41, right: 41, top: 140, bottom: 49 },
+  fontSize: { title: 12, label: 11, minLabel: 7 },
+  spacing: { label: 12 },
+  maxRectHeight: 198.45,
+  extraRectWidth: 22.68,
+  headerGap: 12.17
+};
+
+// ---------- Funções auxiliares ----------
+function showMessage(msg) {
+  const messageBox = document.getElementById("messageBox");
+  messageBox.textContent = msg;
+  messageBox.style.display = "block";
+  setTimeout(() => messageBox.style.display = "none", 4000);
+}
+
+function splitTextIntoLines(text, font, fontSize, maxWidth) {
+  if (!text) return [];
+  text = text.replace(/\n/g,' ');
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+  for (const w of words) {
+    const testLine = currentLine ? currentLine + ' ' + w : w;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    if (width > maxWidth) {
+      if (currentLine) lines.push(currentLine);
+      currentLine = w;
+    } else currentLine = testLine;
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+function drawTextBlock(page, x, yTop, rectHeight, totalLines, fontBold, fontRegular, fontSizeLabel) {
+  if(totalLines.length === 0) return;
+  let fontSize = fontSizeLabel;
+  while(fontSize >= CONFIG.fontSize.minLabel){
+    let totalHeight = totalLines.reduce((acc,item)=> acc + item.lines.length*CONFIG.spacing.label + CONFIG.spacing.label/2, 0) + CONFIG.headerGap;
+    if(totalHeight <= rectHeight) break;
+    fontSize -= 0.5;
+  }
+  let y = yTop - CONFIG.headerGap;
+  totalLines.forEach(item => {
+    page.drawText(item.label, {x: x+12, y: y, size: fontSize, font: fontBold});
+    item.lines.forEach(line=>{
+      page.drawText(line, {x: x+12+item.labelWidth+5, y: y, size: fontSize, font: fontRegular});
+      y -= CONFIG.spacing.label;
+    });
+    y -= CONFIG.spacing.label/2;
+  });
+}
+
+// ---------- Máscara telefone ----------
+const telefoneInput = document.getElementById("telefone");
+telefoneInput.addEventListener("input", (e)=>{
+  let values = e.target.value.split(';').map(v=>v.replace(/\D/g,'').slice(0,11)); 
+  let formattedValues = values.map(v=>{
+    let formatted = '';
+    if(v.length > 0) formatted += '(' + v.slice(0,2);
+    if(v.length >= 3) formatted += ') ' + v.slice(2,7);
+    if(v.length >= 8) formatted += '-' + v.slice(7);
+    return formatted;
+  });
+  e.target.value = formattedValues.join('; ');
+});
+
+// ---------- Localizar frase ----------
+async function findTextPosition(pdf, searchText) {
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    for (let item of textContent.items) {
+      if (item.str && item.str.toLowerCase().includes(searchText.toLowerCase())) {
+        const tx = item.transform[4];
+        const ty = item.transform[5];
+        return { page: pageNum - 1, x: tx, y: ty };
+      }
+    }
+  }
+  return null;
+}
+
+// ---------- Upload PDF base ----------
+document.getElementById("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  originalFileName = file.name;
+  pdfArrayBuffer = await file.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({data: pdfArrayBuffer}).promise;
+});
+
+// ---------- Adicionar imagens ----------
+document.getElementById("addImageBtn").addEventListener("click", () => {
+  const container = document.getElementById("imgUploadsContainer");
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.className = "imgUpload";
+  container.appendChild(input);
+});
+
+// ---------- Desenhar imagens ----------
+async function drawImagesOnPages(pdfLibDoc, startPageIndex) {
+  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
+  if (!uploads.length) return;
+
+  const pageWidth = pdfLibDoc.getPages()[0].getWidth();
+  const pageHeight = pdfLibDoc.getPages()[0].getHeight();
+  const usableWidth = pageWidth - CONFIG.margins.left - CONFIG.margins.right;
+  const usableHeight = pageHeight - CONFIG.margins.top - CONFIG.margins.bottom;
+
+  let pageIndex = startPageIndex;
+
+  for (let i = 0; i < uploads.length; i += 2) {
+    const images = uploads.slice(i, i+2);
+    const currentPage = pdfLibDoc.getPages()[pageIndex] || pdfLibDoc.addPage();
+    let yCursor = pageHeight - CONFIG.margins.top;
+
+    // fundo branco na área útil
+    currentPage.drawRectangle({
+      x: CONFIG.margins.left,
+      y: CONFIG.margins.bottom,
+      width: usableWidth,
+      height: usableHeight,
+      color: PDFLib.rgb(1,1,1)
+    });
+
+    for (const input of images) {
+      const file = input.files[0];
+      const bytes = await file.arrayBuffer();
+      const img = file.type === 'image/png' ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+      const scale = Math.min(usableWidth / img.width, usableHeight / img.height / images.length);
+      const imgWidth = img.width * scale;
+      const imgHeight = img.height * scale;
+      const x = CONFIG.margins.left + (usableWidth - imgWidth) / 2;
+      yCursor -= imgHeight;
+      currentPage.drawImage(img, { x, y: yCursor, width: imgWidth, height: imgHeight });
+      yCursor -= 10; // espaço entre imagens
+    }
+
+    pageIndex++;
+  }
+
+  return pageIndex; // para controle de páginas usadas
+}
+
+// ---------- Gerar PDF ----------
 // ---------- Gerar PDF ----------
 async function gerarPdfFinal(){
   if(!pdfDoc || !pdfArrayBuffer) throw new Error("Carregue primeiro o PDF base.");
@@ -62,3 +331,61 @@ async function gerarPdfFinal(){
 
   return pdfLibDoc.save();
 }
+
+// ---------- Botões ----------
+document.getElementById("previewBtn").addEventListener("click", async ()=>{
+  try{
+    const newPdfBytes = await gerarPdfFinal();
+    const blob = new Blob([newPdfBytes], {type:"application/pdf"});
+    const url = URL.createObjectURL(blob);
+    const frame = document.getElementById("previewFrame");
+    frame.src = url;
+    frame.onload = ()=>URL.revokeObjectURL(url);
+  }catch(err){ showMessage("Erro: "+err.message); }
+});
+
+document.getElementById("downloadBtn").addEventListener("click", async ()=>{
+  try{
+    const newPdfBytes = await gerarPdfFinal();
+
+    if (!window.showSaveFilePicker) {
+      const blob = new Blob([newPdfBytes], {type:"application/pdf"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = originalFileName;
+      a.click();
+      return;
+    }
+
+    const handle = await window.showSaveFilePicker({
+      suggestedName: originalFileName,
+      types: [{ description: 'PDF Files', accept: { 'application/pdf': ['.pdf'] } }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(newPdfBytes);
+    await writable.close();
+    showMessage("PDF salvo com sucesso!");
+  }catch(err){ showMessage("Erro: "+err.message); }
+});
+
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  ["telefone","nomeContato","endereco","ocorrencia"].forEach(id => document.getElementById(id).value='');
+  document.querySelectorAll(".presetPhrase").forEach(cb => cb.checked=false);
+  document.querySelectorAll(".imgUpload").forEach(i => i.remove());
+  pdfDoc = null;
+  pdfArrayBuffer = null;
+  document.getElementById("fileInput").value='';
+  document.getElementById("previewFrame").src='';
+});
+
+// ---------- Frases automáticas ----------
+document.querySelectorAll('.presetPhrase').forEach(cb=>{
+  cb.addEventListener('change', ()=>{
+    const textArea = document.getElementById('ocorrencia');
+    let selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c=>c.dataset.text);
+    textArea.value = selected.join('\n');
+  });
+});
+</script>
+</body>
+</html>
