@@ -38,7 +38,7 @@ body {
 .preview-container { flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; }
 #previewFrame { flex-grow: 1; min-height: 90vh; border: 1px solid #333; margin-top: 10px; }
 #messageBox { margin-top: 10px; padding: 8px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; font-size: 10pt; }
-#clearBtn { padding:8px 12px; font-size:10pt; border:none; border-radius:5px; background:#d3d3d3; cursor:pointer; }
+#clearBtn { padding:8px 12px; font-size:10pt; border:4px; border-radius:5px; background:#d3d3d3; cursor:pointer; }
 #clearBtn:hover { background:#b0b0b0; }
 .button-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
 </style>
@@ -102,8 +102,8 @@ body {
         <input type="file" id="fileInput" accept="application/pdf">
       </div>
       <div id="messageBox"></div>
-      <div id="imgUploadsContainer">
-        <button style="margin-left: auto; display: flex;" id="clearBtn">Limpar</button>
+      <div>
+        <button style=": auto; display: flex;" id="clearBtn">Limpar</button>
       </div>
     </fieldset>
   </div>
@@ -405,6 +405,7 @@ document.querySelectorAll('.presetPhrase').forEach(cb=>{
 </script>
 </body>
 </html>
+
 
 
 
