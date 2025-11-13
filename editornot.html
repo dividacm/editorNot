@@ -102,6 +102,9 @@ body {
         <input type="file" id="fileInput" accept="application/pdf">
       </div>
       <div id="messageBox"></div>
+      <div>
+        <button style="margin-left: auto; display: flex;" id="clearBtn">Limpar</button>
+      </div>
     </fieldset>
   </div>
 
@@ -109,7 +112,6 @@ body {
     <div class="button-row">
       <button id="previewBtn">Pré-visualizar PDF</button>
       <button id="downloadBtn">Baixar PDF Final</button>
-      <button style="margin-left: auto; display: flex;" id="clearBtn">Limpar</button>
     </div>
     <iframe id="previewFrame" title="Pré-visualização do PDF"></iframe>
   </div>
@@ -403,6 +405,7 @@ document.querySelectorAll('.presetPhrase').forEach(cb=>{
 </script>
 </body>
 </html>
+
 
 
 
