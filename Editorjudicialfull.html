@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Notificação - Editor PDF</title>
+    <style>
+        :root { --primary-color: #0077cc; --primary-hover: #005fa3; --bg-light: #f4f4f4; --border-radius: 8px; --font-family: Arial, sans-serif; }
+        body { font-family: var(--font-family); background: var(--bg-light); margin: 0; padding: 20px; }
+        #container { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .form-container { background: #fff; padding: 13px; border-radius: var(--border-radius); max-width: 400px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .form-container fieldset { border: 1px solid #333; border-radius: var(--border-radius); padding: 9px 13px; margin-bottom: 15px; }
+        .form-container legend { font-weight: bold; padding: 0 5px; }
+        .form-container label { display: block; margin-top: 5px; font-weight: normal; font-size: 10pt; }
+        .form-container input, .form-container textarea { width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 10pt; }
+        .form-container button { padding: 8px 13px; border: none; background: var(--primary-color); color: #fff; border-radius: 5px; cursor: pointer; transition: background 0.2s ease; font-size: 10pt; margin-top: 5px; }
+        .form-container button:hover { background: var(--primary-hover); }
+        .preview-container { flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; }
+        #previewFrame { flex-grow: 1; min-height: 90vh; border: 1px solid #333; margin-top: 10px; background: #666; }
+        #messageBox { margin-top: 10px; padding: 8px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; font-size: 10pt; }
+        .button-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+        #clearBtn { background:#544d4d; }
+        #clearBtn:hover { background:#303030; }
+        .imgUpload { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+  <div class="form-container">
+    <fieldset>
+      <legend>Campos Editáveis</legend>
+      <label>Telefone(s) de Contato:</label>
+      <input type="tel" id="telefone" placeholder="(44) 99999-9999">
+      <label>Nome(s) para Contato:</label>
+      <input type="text" id="nomeContato" placeholder="Digite o nome">
+      <label>Endereço(s):</label>
+      <input type="text" id="endereco" placeholder="Rua, número, bairro">
+      <label>Ocorrências/Parecer:</label>
+      <textarea id="ocorrencia" rows="5" placeholder="Descreva a ocorrência..."></textarea>
+      
+      <fieldset>
+        <legend>Frases Predefinidas</legend>
+        <label><input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> WhatsApp enviado</label>
+        <label><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo."> Cadastro incompleto</label>
+        <label><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário. Comprovante em anexo."> Terreno baldio</label>
+        <label><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa de recebimento</label>
+        <label><input type="checkbox" class="presetPhrase" data-text="Tentativa de contato via WhatsApp sem sucesso e não encontrada empresa/socio no endereço cadastrado. Não foi possível notificar."> Empresa fechada</label>
+      </fieldset>
+    </fieldset>
+
+    <fieldset>
+      <legend>Upload de Imagens</legend>
+      <div id="imgUploadsContainer"></div>
+      <button id="addImageBtn" type="button">Adicionar Imagem</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>PDF Base</legend>
+      <input type="file" id="fileInput" accept="application/pdf">
+      <div id="messageBox"></div>
+      <button id="clearBtn" style="width: 100%; margin-top:10px;">Limpar Tudo</button>
+    </fieldset>
+  </div>
+
+  <div class="preview-container">
+    <div class="button-row">
+      <button id="previewBtn">Pré-visualizar PDF</button>
+      <button id="downloadBtn">Baixar PDF Final</button>
+    </div>
+    <iframe id="previewFrame"></iframe>
+  </div>
+</div>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
+<script>
+let pdfArrayBuffer = null;
+
+const CONFIG = {
+  margins: { left: 41, right: 41, top: 30, bottom: 40 },
+  fontSize: { title: 11, label: 10, content: 10 },
+  spacing: { label: 12 },
+  maxRectHeight: 180,
+  headerGap: 15
+};
+
+function showMessage(msg) {
+  const box = document.getElementById("messageBox");
+  box.textContent = msg;
+  box.style.display = "block";
+  setTimeout(() => box.style.display = "none", 4000);
+}
+
+function splitTextIntoLines(text, font, fontSize, maxWidth) {
+  if (!text) return [];
+  text = text.replace(/\n/g,' ');
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+  
+  for (const w of words) {
+    const testLine = currentLine ? currentLine + ' ' + w : w;
+    const width = font.widthOfTextAtSize(testLine, fontSize);
+    if (width > maxWidth) {
+      if (currentLine) lines.push(currentLine);
+      currentLine = w;
+    } else currentLine = testLine;
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+function drawTextBlock(page, x, yTop, totalLines, fontBold, fontRegular) {
+  let y = yTop - 35; 
+  totalLines.forEach(item => {
+    // Desenha o Rótulo (ex: Telefone:)
+    page.drawText(item.label, {x: x + 12, y: y, size: CONFIG.fontSize.label, font: fontBold});
+    
+    // Define onde o texto começa (após o rótulo)
+    let startX = x + 12 + item.labelWidth + 5;
+    
+    item.lines.forEach((line, index) => {
+      // Se não for a primeira linha do mesmo campo, volta para a margem esquerda e desce o Y
+      if (index > 0) {
+        y -= CONFIG.spacing.label;
+        startX = x + 12; 
+      }
+      
+      page.drawText(line, {x: startX, y: y, size: CONFIG.fontSize.content, font: fontRegular});
+    });
+    
+    // Espaço entre blocos de campos
+    y -= CONFIG.spacing.label + 4;
+  });
+}
+
+document.getElementById("fileInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pdfArrayBuffer = await file.arrayBuffer();
+  showMessage("PDF carregado com sucesso!");
+});
+
+document.getElementById("addImageBtn").addEventListener("click", () => {
+  const container = document.getElementById("imgUploadsContainer");
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.className = "imgUpload";
+  container.appendChild(input);
+});
+
+async function processImages(pdfLibDoc, firstPage, rectBottomY) {
+  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
+  if (!uploads.length) return;
+
+  const pageWidth = firstPage.getWidth();
+  const pageHeight = firstPage.getHeight();
+  const usableWidth = pageWidth - (CONFIG.margins.left * 2);
+
+  for (let i = 0; i < uploads.length; i++) {
+    const bytes = await uploads[i].files[0].arrayBuffer();
+    const isPng = uploads[i].files[0].type === 'image/png';
+    const img = isPng ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+
+    if (i === 0) {
+      const usableHeightFirst = rectBottomY - CONFIG.margins.bottom - 20;
+      const scale = Math.min(usableWidth / img.width, usableHeightFirst / img.height);
+      const imgW = img.width * scale;
+      const imgH = img.height * scale;
+      
+      firstPage.drawImage(img, {
+        x: (pageWidth - imgW) / 2,
+        y: rectBottomY - imgH - 10,
+        width: imgW,
+        height: imgH
+      });
+    } else {
+      const newPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
+      const scale = Math.min(usableWidth / img.width, (pageHeight - 100) / img.height);
+      const imgW = img.width * scale;
+      const imgH = img.height * scale;
+      newPage.drawImage(img, {
+        x: (pageWidth - imgW) / 2,
+        y: (pageHeight - imgH) / 2,
+        width: imgW,
+        height: imgH
+      });
+    }
+  }
+}
+
+async function gerarPdfFinal() {
+  if (!pdfArrayBuffer) throw new Error("Selecione um arquivo PDF primeiro.");
+
+  const newPdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
+  
+  // Remoção de páginas específicas (2, 4, 6 da lista original)
+  const totalPages = newPdfDoc.getPageCount();
+  [6, 4, 2, 0].forEach(index => { if (totalPages > index) newPdfDoc.removePage(index); });
+
+  const remainingPages = newPdfDoc.getPages();
+  const { width, height } = remainingPages[0].getSize();
+  const firstPage = newPdfDoc.insertPage(0, [width, height]);
+
+  const fontBold = await newPdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  const fontRegular = await newPdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+  const fields = [
+    {label:"Telefone(s):", value: document.getElementById("telefone").value},
+    {label:"Nome(s):", value: document.getElementById("nomeContato").value},
+    {label:"Endereço:", value: document.getElementById("endereco").value},
+    {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
+  ].filter(f => f.value.trim() !== '');
+
+  const rectWidth = width - (CONFIG.margins.left * 2);
+  
+  // Lógica de quebra de linha aprimorada
+  const totalLines = fields.map(f => {
+    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
+    // O texto tem rectWidth - 24 (paddings) de espaço total
+    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.content, rectWidth - 30 - labelWidth);
+    return {label: f.label, labelWidth, lines};
+  });
+
+  const rectX = CONFIG.margins.left;
+  const rectY = height - CONFIG.maxRectHeight - CONFIG.margins.top; 
+  
+  firstPage.drawRectangle({
+    x: rectX, y: rectY, width: rectWidth, height: CONFIG.maxRectHeight,
+    borderColor: PDFLib.rgb(0,0,0), borderWidth: 1, color: PDFLib.rgb(1,1,1), borderRadius: 5
+  });
+
+  const title = "ENTREGA DE NOTIFICAÇÕES - JUDICIAL";
+  const titleWidth = fontBold.widthOfTextAtSize(title, CONFIG.fontSize.title);
+  const titleX = rectX + (rectWidth - titleWidth) / 2;
+
+  firstPage.drawText(title, {
+    x: titleX, y: rectY + CONFIG.maxRectHeight - 20, size: CONFIG.fontSize.title, font: fontBold
+  });
+
+  drawTextBlock(firstPage, rectX, rectY + CONFIG.maxRectHeight, totalLines, fontBold, fontRegular);
+
+  await processImages(newPdfDoc, firstPage, rectY);
+
+  return await newPdfDoc.save();
+}
+
+document.getElementById("previewBtn").addEventListener("click", async () => {
+  try {
+    const bytes = await gerarPdfFinal();
+    const blob = new Blob([bytes], {type: "application/pdf"});
+    document.getElementById("previewFrame").src = URL.createObjectURL(blob);
+  } catch(e) { showMessage(e.message); }
+});
+
+document.getElementById("downloadBtn").addEventListener("click", async () => {
+  try {
+    const bytes = await gerarPdfFinal();
+    const blob = new Blob([bytes], {type: "application/pdf"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Notificacao_Campo_Mourao.pdf";
+    link.click();
+  } catch(e) { showMessage(e.message); }
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => location.reload());
+
+document.querySelectorAll('.presetPhrase').forEach(cb => {
+  cb.addEventListener('change', () => {
+    const textArea = document.getElementById('ocorrencia');
+    const selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text);
+    textArea.value = selected.join('\n');
+  });
+});
+</script>
+</body>
+</html>
