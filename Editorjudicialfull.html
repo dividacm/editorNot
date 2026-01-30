@@ -3,277 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerar Notificação - Editor PDF</title>
+    <title>Gerar Notificação - Dashboard</title>
     <style>
-        :root { --primary-color: #0077cc; --primary-hover: #005fa3; --bg-light: #f4f4f4; --border-radius: 8px; --font-family: Arial, sans-serif; }
-        body { font-family: var(--font-family); background: var(--bg-light); margin: 0; padding: 20px; }
-        #container { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-        .form-container { background: #fff; padding: 13px; border-radius: var(--border-radius); max-width: 400px; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .form-container fieldset { border: 1px solid #333; border-radius: var(--border-radius); padding: 9px 13px; margin-bottom: 15px; }
-        .form-container legend { font-weight: bold; padding: 0 5px; }
-        .form-container label { display: block; margin-top: 5px; font-weight: normal; font-size: 10pt; }
-        .form-container input, .form-container textarea { width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 10pt; }
-        .form-container button { padding: 8px 13px; border: none; background: var(--primary-color); color: #fff; border-radius: 5px; cursor: pointer; transition: background 0.2s ease; font-size: 10pt; margin-top: 5px; }
-        .form-container button:hover { background: var(--primary-hover); }
-        .preview-container { flex-grow: 1; display: flex; flex-direction: column; min-width: 300px; }
-        #previewFrame { flex-grow: 1; min-height: 90vh; border: 1px solid #333; margin-top: 10px; background: #666; }
-        #messageBox { margin-top: 10px; padding: 8px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; font-size: 10pt; }
-        .button-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
-        #clearBtn { background:#544d4d; }
-        #clearBtn:hover { background:#303030; }
-        .imgUpload { margin-bottom: 5px; }
+    /* --- VARIÁVEIS --- */
+    :root {
+        --primary-color: #0077cc;
+        --primary-hover: #005fa3;
+        --bg-body: #c7c9c9;
+        --bg-card: #ffffff;
+        --text-main: #1f1d1d;
+        --border-color: #dcdde6;
+        --input-bg: #d8e2e3;
+        --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        --border-radius: 8px;
+        --drop-zone-bg: #f8f9fa;
+        --drop-zone-border: #cbd5e0;
+    }
+
+    /* Temas */
+    body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; }
+    body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; }
+    body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
+    
+    body.theme-dark {
+        --primary-color: #4a9eff; --primary-hover: #0077cc;
+        --bg-body: #121212; --bg-card: #1e1e1e;
+        --text-main: #e0e0e0; --border-color: #333;
+        --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border: #444;
+    }
+
+    /* --- LAYOUT "TRAVADO" NA TELA (APP STYLE) --- */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Remove rolagem da página inteira */
+        font-family: var(--font-family);
+        background: var(--bg-body);
+        color: var(--text-main);
+    }
+
+    #container { 
+        display: flex; 
+        height: 100vh; /* Ocupa 100% da altura da viewport */
+        padding: 11px; 
+        box-sizing: border-box;
+        gap: 15px;
+    }
+
+    /* COLUNA ESQUERDA (FORMULÁRIO) */
+    .form-container {
+        background: var(--bg-card);
+        padding: 10px;
+        border-radius: var(--border-radius);
+        width: 480px; /* Largura fixa para o menu */
+        min-width: 350px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        
+        /* A MÁGICA DA ROLAGEM INTERNA */
+        overflow-y: auto; 
+        height: 100%; 
+        box-sizing: border-box;
+    }
+
+    /* Scrollbar Bonita (Chrome/Edge/Safari) */
+    .form-container::-webkit-scrollbar { width: 8px; }
+    .form-container::-webkit-scrollbar-track { background: transparent; }
+    .form-container::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 4px; }
+
+    /* COLUNA DIREITA (PREVIEW) */
+    .preview-container { 
+        flex-grow: 1; 
+        display: flex; 
+        flex-direction: column; 
+        height: 100%;
+        min-width: 0; /* Impede overflow flexbox */
+    }
+
+    /* O Iframe ocupa todo o resto do espaço disponível */
+    #previewFrame { 
+        flex-grow: 1; 
+        width: 100%; 
+        border: none;
+        border-radius: var(--border-radius);
+        background: #525659; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    /* --- MOBILE (Reseta para rolagem normal se a tela for pequena) --- */
+    @media (max-width: 800px) {
+        html, body { overflow: auto; height: auto; }
+        #container { flex-direction: column; height: auto; }
+        .form-container { width: 100%; height: auto; overflow-y: visible; }
+        .preview-container { height: 600px; }
+    }
+
+    /* --- ESTILOS DOS COMPONENTES --- */
+    .theme-selector {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+    .theme-selector select {
+        padding: 2px 4px; border-radius: 4px; border: 1px solid var(--border-color);
+        background: var(--input-bg); color: var(--text-main); cursor: pointer;
+    }
+
+    fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
+    legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
+    label { display: block; margin-top: 5px; font-weight: 500; font-size: 0.9rem; }
+
+    input:not([type="checkbox"]), textarea, select {
+        width: 100%; padding: 5px; margin-top: 3px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-main);
+        border-radius: 6px; box-sizing: border-box;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary-color); }
+
+    button {
+        padding: 6px 12px; border: none; background: var(--primary-color); color: #fff;
+        border-radius: 6px; cursor: pointer; transition: all 0.2s;
+        font-weight: 500; font-size: 0.95rem; margin-top: 10px;
+    }
+    button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+    /* Checkbox Styles */
+    .checkbox-label {
+        display: flex !important; align-items: flex-start; margin-top: 8px !important; cursor: pointer;
+        font-size: 0.9rem; font-weight: normal; color: var(--text-main);
+    }
+    .checkbox-label input[type="checkbox"] {
+        width: 14px !important; height: 18px; margin-right: 10px; margin-top: 2px; flex-shrink: 0; cursor: pointer;
+    }
+
+    /* Drag Zone */
+    .drop-zone {
+        border: 2px dashed var(--drop-zone-border);
+        border-radius: var(--border-radius);
+        padding: 10px; text-align: center;
+        background: var(--drop-zone-bg);
+        transition: all 0.2s ease; cursor: pointer; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--primary-color); background: rgba(0, 119, 204, 0.05); }
+    .drop-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+    /* Estilo da lista de imagens */
+    .img-tag {
+        background: var(--primary-color);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin-right: 5px;
+        margin-top: 5px;
+        display: inline-block;
+    }
+
+    /* Barra Superior do Preview */
+    .button-row { 
+        display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; 
+        background: var(--bg-card); padding: 8px; border-radius: var(--border-radius);
+        border: 1px solid var(--border-color); flex-shrink: 0;
+    }
+    
+    #messageBox { 
+        margin-top: 10px; padding: 10px; border-radius: var(--border-radius); 
+        background: #fdd; color: #900; display: none; text-align: center; font-size: 0.9rem;
+    }
+    #statusIndicator { font-size: 0.85rem; color: #888; margin-left: auto; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div id="container">
+  
   <div class="form-container">
+    
     <fieldset>
-      <legend>Campos Editáveis</legend>
-      <label>Telefone(s) de Contato:</label>
-      <input type="tel" id="telefone" placeholder="(44) 99999-9999">
-      <label>Nome(s) para Contato:</label>
-      <input type="text" id="nomeContato" placeholder="Digite o nome">
-      <label>Endereço(s):</label>
-      <input type="text" id="endereco" placeholder="Rua, número, bairro">
-      <label>Ocorrências/Parecer:</label>
-      <textarea id="ocorrencia" rows="5" placeholder="Descreva a ocorrência..."></textarea>
+      <legend>Dados da Notificação</legend>
+      <label>Telefone(s):</label>
+      <input type="tel" id="telefone" placeholder="(44) 99999-9999" class="auto-update">
       
-      <fieldset>
-        <legend>Frases Predefinidas</legend>
-        <label><input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> WhatsApp enviado</label>
-        <label><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo."> Cadastro incompleto</label>
-        <label><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário. Comprovante em anexo."> Terreno baldio</label>
-        <label><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa de recebimento</label>
-        <label><input type="checkbox" class="presetPhrase" data-text="Tentativa de contato via WhatsApp sem sucesso e não encontrada empresa/socio no endereço cadastrado. Não foi possível notificar."> Empresa fechada</label>
-      </fieldset>
+      <label>Nome(s):</label>
+      <input type="text" id="nomeContato" placeholder="Nome completo" class="auto-update">
+      
+      <label>Endereço:</label>
+      <input type="text" id="endereco" placeholder="Endereço completo" class="auto-update">
+      
+      <label>Ocorrência:</label>
+      <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
+      
+      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color);">
+        <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px;">Frases Rápidas</label>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            
+            <label class="checkbox-label" style="margin-top: 0 !important;">
+                <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> 
+                WhatsApp enviado
+            </label>
+
+            <label class="checkbox-label" style="margin-top: 0 !important;">
+                <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo."> 
+                Cadastro incompleto
+            </label>
+
+            <label class="checkbox-label" style="margin-top: 0 !important;">
+                <input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário. Comprovante em anexo."> 
+                Terreno baldio
+            </label>
+
+            <label class="checkbox-label" style="margin-top: 0 !important;">
+                <input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> 
+                Recusa
+            </label>
+
+            <label class="checkbox-label" style="margin-top: 0 !important; grid-column: span 2;">
+                <input type="checkbox" class="presetPhrase" data-text="Tentativa de contato via WhatsApp sem sucesso e não encontrada empresa/socio no endereço cadastrado. Não foi possível notificar."> 
+                Empresa fechada
+            </label>
+
+        </div>
+      </div>
     </fieldset>
 
     <fieldset>
-      <legend>Upload de Imagens</legend>
-      <div id="imgUploadsContainer"></div>
-      <button id="addImageBtn" type="button">Adicionar Imagem</button>
+      <legend>Arquivo PDF Original</legend>
+      <div class="drop-zone" id="pdfDropZone">
+          <input type="file" id="fileInput" accept="application/pdf">
+          <div style="font-size: 8px;">📄</div>
+          <p><strong>Clique ou Arraste</strong><br> PDF aqui</p>
+      </div>
+      <div id="fileInfo" style="margin-top: 8px; font-size: 0.85rem; color: #2e7d32; font-weight: bold; display: none;">Arquivo carregado!</div>
     </fieldset>
 
     <fieldset>
-      <legend>PDF Base</legend>
-      <input type="file" id="fileInput" accept="application/pdf">
-      <div id="messageBox"></div>
-      <button id="clearBtn" style="width: 100%; margin-top:10px;">Limpar Tudo</button>
+      <legend>Anexos </legend>
+      <div class="drop-zone" id="imgDropZone">
+          <input type="file" id="imgInput" accept="image/*" multiple>
+          <div style="font-size: 8px;">🖼️</div>
+          <p><strong>Clique ou Arraste</strong><br>Imagens aqui</p>
+      </div>
+      <div id="imgListContainer" style="margin-top: 8px;"></div>
     </fieldset>
+
+    <div id="messageBox"></div>
+    <div style="margin-top: auto; padding-top: 6px;">
+        <button id="clearBtn" style="width: 100%; background: #d32f2f;">Limpar Tudo</button>
+    </div>
   </div>
 
   <div class="preview-container">
     <div class="button-row">
-      <button id="previewBtn">Pré-visualizar PDF</button>
-      <button id="downloadBtn">Baixar PDF Final</button>
+      <button id="previewBtn" style="margin:0;">🔄 Atualizar</button>
+      <button id="downloadBtn" style="margin:0; background: #2e7d32;">💾 Baixar PDF</button>
+      <span id="statusIndicator"></span>
+      <div class="theme-selector">
+        <select id="themeSelect">
+            <option value="default">🔵 Azul (Padrão)</option>
+            <option value="gold">🟡 Dourado</option>
+            <option value="pink">🌸 Rosa</option>
+            <option value="purple">🟣 Roxo</option>
+            <option value="dark">🌑 Modo Escuro</option>
+        </select>
+    </div>
     </div>
     <iframe id="previewFrame"></iframe>
   </div>
 </div>
 
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
-let pdfArrayBuffer = null;
-
-const CONFIG = {
-  margins: { left: 41, right: 41, top: 30, bottom: 40 },
-  fontSize: { title: 11, label: 10, content: 10 },
-  spacing: { label: 12 },
-  maxRectHeight: 180,
-  headerGap: 15
-};
-
-function showMessage(msg) {
-  const box = document.getElementById("messageBox");
-  box.textContent = msg;
-  box.style.display = "block";
-  setTimeout(() => box.style.display = "none", 4000);
-}
-
-function splitTextIntoLines(text, font, fontSize, maxWidth) {
-  if (!text) return [];
-  text = text.replace(/\n/g,' ');
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = '';
-  
-  for (const w of words) {
-    const testLine = currentLine ? currentLine + ' ' + w : w;
-    const width = font.widthOfTextAtSize(testLine, fontSize);
-    if (width > maxWidth) {
-      if (currentLine) lines.push(currentLine);
-      currentLine = w;
-    } else currentLine = testLine;
-  }
-  if (currentLine) lines.push(currentLine);
-  return lines;
-}
-
-function drawTextBlock(page, x, yTop, totalLines, fontBold, fontRegular) {
-  let y = yTop - 35; 
-  totalLines.forEach(item => {
-    // Desenha o Rótulo (ex: Telefone:)
-    page.drawText(item.label, {x: x + 12, y: y, size: CONFIG.fontSize.label, font: fontBold});
+document.addEventListener("DOMContentLoaded", () => {
     
-    // Define onde o texto começa (após o rótulo)
-    let startX = x + 12 + item.labelWidth + 5;
+    // Agora o estado guarda o PDF E a lista de imagens
+    const AppState = { pdfBuffer: null, images: [], isProcessing: false };
     
-    item.lines.forEach((line, index) => {
-      // Se não for a primeira linha do mesmo campo, volta para a margem esquerda e desce o Y
-      if (index > 0) {
-        y -= CONFIG.spacing.label;
-        startX = x + 12; 
-      }
+    const CONFIG = {
+      margins: { left: 41, right: 41, top: 30, bottom: 40 },
+      fontSize: { title: 11, label: 10, content: 10 },
+      spacing: { label: 12 },
+      maxRectHeight: 180
+    };
+
+    function showMessage(msg, isError = true) {
+      const box = document.getElementById("messageBox");
+      box.textContent = msg;
+      box.style.background = isError ? "#fdd" : "#dfd";
+      box.style.color = isError ? "#900" : "#050";
+      box.style.display = "block";
+      setTimeout(() => box.style.display = "none", 4000);
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+
+    function setStatus(msg) {
+        const indicator = document.getElementById('statusIndicator');
+        const btn = document.getElementById('previewBtn');
+        indicator.textContent = msg;
+        if (msg) {
+            btn.textContent = "⏳...";
+            document.getElementById('previewFrame').style.opacity = "0.7";
+        } else {
+            btn.textContent = "🔄 Atualizar";
+            document.getElementById('previewFrame').style.opacity = "1";
+        }
+    }
+
+    async function loadPdfFile(file) {
+        if (!file || file.type !== 'application/pdf') {
+            showMessage("Selecione um PDF válido.");
+            return;
+        }
+        try {
+            AppState.pdfBuffer = await file.arrayBuffer();
+            document.getElementById("fileInfo").style.display = "block";
+            document.getElementById("fileInfo").textContent = `✅ ${file.name}`;
+            showMessage("Carregando...", false);
+            triggerPreviewUpdate();
+        } catch (e) {
+            showMessage("Erro: " + e.message);
+        }
+    }
+
+    // Função para adicionar imagens ao estado e atualizar UI
+    function handleImageFiles(files) {
+        const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (newFiles.length === 0) return;
+
+        // Adiciona ao array global
+        AppState.images.push(...newFiles);
+
+        // Atualiza a visualização da lista
+        const container = document.getElementById('imgListContainer');
+        container.innerHTML = ''; // Limpa e redesenha
+        AppState.images.forEach(img => {
+            const tag = document.createElement('span');
+            tag.className = 'img-tag';
+            tag.textContent = img.name;
+            container.appendChild(tag);
+        });
+
+        triggerPreviewUpdate();
+    }
+
+    async function gerarPdfBytes() {
+      if (!AppState.pdfBuffer) throw new Error("PDF base não carregado.");
       
-      page.drawText(line, {x: startX, y: y, size: CONFIG.fontSize.content, font: fontRegular});
+      const newPdfDoc = await PDFLib.PDFDocument.load(AppState.pdfBuffer);
+      const totalPages = newPdfDoc.getPageCount();
+      [6, 4, 2, 0].forEach(index => { if (totalPages > index) newPdfDoc.removePage(index); });
+
+      const remainingPages = newPdfDoc.getPages();
+      const { width, height } = remainingPages[0].getSize();
+      const firstPage = newPdfDoc.insertPage(0, [width, height]);
+
+      const fontBold = await newPdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+      const fontRegular = await newPdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+      const fields = [
+        {label:"Telefone(s):", value: document.getElementById("telefone").value},
+        {label:"Nome(s):", value: document.getElementById("nomeContato").value},
+        {label:"Endereço:", value: document.getElementById("endereco").value},
+        {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
+      ].filter(f => f.value.trim() !== '');
+
+      const rectWidth = width - (CONFIG.margins.left * 2);
+      const rectX = CONFIG.margins.left;
+      const rectY = height - CONFIG.maxRectHeight - CONFIG.margins.top; 
+      
+      firstPage.drawRectangle({
+        x: rectX, y: rectY, width: rectWidth, height: CONFIG.maxRectHeight,
+        borderColor: PDFLib.rgb(0,0,0), borderWidth: 1, color: PDFLib.rgb(1,1,1), borderRadius: 5
+      });
+
+      const title = "ENTREGA DE NOTIFICAÇÕES - JUDICIAL";
+      const titleWidth = fontBold.widthOfTextAtSize(title, CONFIG.fontSize.title);
+      const titleX = rectX + (rectWidth - titleWidth) / 2;
+      firstPage.drawText(title, { x: titleX, y: rectY + CONFIG.maxRectHeight - 20, size: CONFIG.fontSize.title, font: fontBold });
+
+      let currentY = rectY + CONFIG.maxRectHeight - 35;
+      fields.forEach(field => {
+          firstPage.drawText(field.label, { x: rectX + 12, y: currentY, size: CONFIG.fontSize.label, font: fontBold });
+          const labelW = fontBold.widthOfTextAtSize(field.label, CONFIG.fontSize.label);
+          const maxTextW = rectWidth - 30 - labelW;
+          const words = field.value.replace(/\n/g, ' ').split(' ');
+          let line = '';
+          let textX = rectX + 12 + labelW + 5;
+
+          words.forEach(w => {
+              const testLine = line ? line + ' ' + w : w;
+              const testW = fontRegular.widthOfTextAtSize(testLine, CONFIG.fontSize.content);
+              if (testW > maxTextW) {
+                  firstPage.drawText(line, { x: textX, y: currentY, size: CONFIG.fontSize.content, font: fontRegular });
+                  line = w;
+                  currentY -= CONFIG.spacing.label;
+                  textX = rectX + 12;
+              } else {
+                  line = testLine;
+              }
+          });
+          if (line) firstPage.drawText(line, { x: textX, y: currentY, size: CONFIG.fontSize.content, font: fontRegular });
+          currentY -= (CONFIG.spacing.label + 4);
+      });
+
+      // LÓGICA DE IMAGENS ATUALIZADA (Lê do Array em vez do DOM)
+      if (AppState.images.length > 0) {
+          const usableWidth = width - (CONFIG.margins.left * 2);
+          for (let i = 0; i < AppState.images.length; i++) {
+            const bytes = await AppState.images[i].arrayBuffer();
+            const isPng = AppState.images[i].type === 'image/png';
+            const img = isPng ? await newPdfDoc.embedPng(bytes) : await newPdfDoc.embedJpg(bytes);
+
+            if (i === 0) {
+              const usableH = rectY - CONFIG.margins.bottom - 20;
+              const scale = Math.min(usableWidth / img.width, usableH / img.height);
+              const imgW = img.width * scale;
+              const imgH = img.height * scale;
+              firstPage.drawImage(img, { x: (width - imgW) / 2, y: rectY - imgH - 10, width: imgW, height: imgH });
+            } else {
+              const newPage = newPdfDoc.addPage([width, height]);
+              const scale = Math.min(usableWidth / img.width, (height - 100) / img.height);
+              const imgW = img.width * scale;
+              const imgH = img.height * scale;
+              newPage.drawImage(img, { x: (width - imgW) / 2, y: (height - imgH) / 2, width: imgW, height: imgH });
+            }
+          }
+      }
+      return await newPdfDoc.save();
+    }
+
+    /* --- CONFIGURAÇÃO DRAG AND DROP (PDF) --- */
+    const pdfDropZone = document.getElementById('pdfDropZone');
+    const pdfInput = document.getElementById('fileInput');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        pdfDropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    pdfDropZone.addEventListener('dragover', () => pdfDropZone.classList.add('drag-over'));
+    pdfDropZone.addEventListener('dragleave', () => pdfDropZone.classList.remove('drag-over'));
+    pdfDropZone.addEventListener('drop', (e) => {
+        pdfDropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) loadPdfFile(e.dataTransfer.files[0]);
+    });
+    pdfInput.addEventListener('change', (e) => { if (e.target.files.length) loadPdfFile(e.target.files[0]); });
+
+    /* --- CONFIGURAÇÃO DRAG AND DROP (IMAGENS) --- */
+    const imgDropZone = document.getElementById('imgDropZone');
+    const imgInput = document.getElementById('imgInput');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        imgDropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    imgDropZone.addEventListener('dragover', () => imgDropZone.classList.add('drag-over'));
+    imgDropZone.addEventListener('dragleave', () => imgDropZone.classList.remove('drag-over'));
+    
+    // Drop de Imagens
+    imgDropZone.addEventListener('drop', (e) => {
+        imgDropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) handleImageFiles(e.dataTransfer.files);
     });
     
-    // Espaço entre blocos de campos
-    y -= CONFIG.spacing.label + 4;
-  });
-}
+    // Seleção manual de imagens
+    imgInput.addEventListener('change', (e) => { 
+        if (e.target.files.length) handleImageFiles(e.target.files); 
+    });
 
-document.getElementById("fileInput").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  pdfArrayBuffer = await file.arrayBuffer();
-  showMessage("PDF carregado com sucesso!");
-});
 
-document.getElementById("addImageBtn").addEventListener("click", () => {
-  const container = document.getElementById("imgUploadsContainer");
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.className = "imgUpload";
-  container.appendChild(input);
-});
+    // --- DEBOUNCE E UPDATES ---
+    const triggerPreviewUpdate = debounce(async () => {
+        if (!AppState.pdfBuffer) return;
+        try {
+            setStatus("Gerando...");
+            const pdfBytes = await gerarPdfBytes();
+            const blob = new Blob([pdfBytes], {type: "application/pdf"});
+            const oldSrc = document.getElementById("previewFrame").src;
+            if (oldSrc) URL.revokeObjectURL(oldSrc);
+            document.getElementById("previewFrame").src = URL.createObjectURL(blob);
+        } catch (e) { console.log("Aguardando dados..."); } 
+        finally { setStatus(""); }
+    }, 1000);
 
-async function processImages(pdfLibDoc, firstPage, rectBottomY) {
-  const uploads = Array.from(document.querySelectorAll(".imgUpload")).filter(input => input.files.length);
-  if (!uploads.length) return;
+    document.querySelectorAll('.auto-update').forEach(input => input.addEventListener('input', triggerPreviewUpdate));
+    
+    document.querySelectorAll('.presetPhrase').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const textArea = document.getElementById('ocorrencia');
+            const selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text);
+            textArea.value = selected.join('\n');
+            textArea.dispatchEvent(new Event('input'));
+        });
+    });
 
-  const pageWidth = firstPage.getWidth();
-  const pageHeight = firstPage.getHeight();
-  const usableWidth = pageWidth - (CONFIG.margins.left * 2);
+    document.getElementById("previewBtn").addEventListener("click", triggerPreviewUpdate);
+    
+    document.getElementById("downloadBtn").addEventListener("click", async () => {
+      try {
+        setStatus("Baixando...");
+        const bytes = await gerarPdfBytes();
+        const blob = new Blob([bytes], {type: "application/pdf"});
+        const nomeArquivo = "Notificacao_Campo_Mourao.pdf";
 
-  for (let i = 0; i < uploads.length; i++) {
-    const bytes = await uploads[i].files[0].arrayBuffer();
-    const isPng = uploads[i].files[0].type === 'image/png';
-    const img = isPng ? await pdfLibDoc.embedPng(bytes) : await pdfLibDoc.embedJpg(bytes);
+        if (window.showSaveFilePicker) {
+            const handle = await window.showSaveFilePicker({ suggestedName: nomeArquivo, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+        } else {
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = nomeArquivo;
+            link.click();
+        }
+      } catch(e) { showMessage(e.message); } 
+      finally { setStatus(""); }
+    });
 
-    if (i === 0) {
-      const usableHeightFirst = rectBottomY - CONFIG.margins.bottom - 20;
-      const scale = Math.min(usableWidth / img.width, usableHeightFirst / img.height);
-      const imgW = img.width * scale;
-      const imgH = img.height * scale;
-      
-      firstPage.drawImage(img, {
-        x: (pageWidth - imgW) / 2,
-        y: rectBottomY - imgH - 10,
-        width: imgW,
-        height: imgH
-      });
-    } else {
-      const newPage = pdfLibDoc.addPage([pageWidth, pageHeight]);
-      const scale = Math.min(usableWidth / img.width, (pageHeight - 100) / img.height);
-      const imgW = img.width * scale;
-      const imgH = img.height * scale;
-      newPage.drawImage(img, {
-        x: (pageWidth - imgW) / 2,
-        y: (pageHeight - imgH) / 2,
-        width: imgW,
-        height: imgH
-      });
-    }
-  }
-}
+    document.getElementById("clearBtn").addEventListener("click", () => location.reload());
 
-async function gerarPdfFinal() {
-  if (!pdfArrayBuffer) throw new Error("Selecione um arquivo PDF primeiro.");
+    // Máscara e Formatação
+    document.getElementById('telefone').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        if (value.length > 10) value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        else if (value.length > 5) value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+        else if (value.length > 2) value = value.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+        e.target.value = value;
+    });
 
-  const newPdfDoc = await PDFLib.PDFDocument.load(pdfArrayBuffer);
-  
-  // Remoção de páginas específicas (2, 4, 6 da lista original)
-  const totalPages = newPdfDoc.getPageCount();
-  [6, 4, 2, 0].forEach(index => { if (totalPages > index) newPdfDoc.removePage(index); });
+    ['nomeContato', 'endereco'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function (e) {
+            let start = this.selectionStart; let end = this.selectionEnd;
+            this.value = this.value.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+            this.setSelectionRange(start, end);
+        });
+    });
 
-  const remainingPages = newPdfDoc.getPages();
-  const { width, height } = remainingPages[0].getSize();
-  const firstPage = newPdfDoc.insertPage(0, [width, height]);
+    document.getElementById('ocorrencia').addEventListener('input', function (e) {
+        let start = this.selectionStart; let end = this.selectionEnd;
+        if (this.value.length > 0) this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        this.setSelectionRange(start, end);
+    });
 
-  const fontBold = await newPdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-  const fontRegular = await newPdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-
-  const fields = [
-    {label:"Telefone(s):", value: document.getElementById("telefone").value},
-    {label:"Nome(s):", value: document.getElementById("nomeContato").value},
-    {label:"Endereço:", value: document.getElementById("endereco").value},
-    {label:"Ocorrência/Parecer:", value: document.getElementById("ocorrencia").value}
-  ].filter(f => f.value.trim() !== '');
-
-  const rectWidth = width - (CONFIG.margins.left * 2);
-  
-  // Lógica de quebra de linha aprimorada
-  const totalLines = fields.map(f => {
-    const labelWidth = fontBold.widthOfTextAtSize(f.label, CONFIG.fontSize.label);
-    // O texto tem rectWidth - 24 (paddings) de espaço total
-    const lines = splitTextIntoLines(f.value, fontRegular, CONFIG.fontSize.content, rectWidth - 30 - labelWidth);
-    return {label: f.label, labelWidth, lines};
-  });
-
-  const rectX = CONFIG.margins.left;
-  const rectY = height - CONFIG.maxRectHeight - CONFIG.margins.top; 
-  
-  firstPage.drawRectangle({
-    x: rectX, y: rectY, width: rectWidth, height: CONFIG.maxRectHeight,
-    borderColor: PDFLib.rgb(0,0,0), borderWidth: 1, color: PDFLib.rgb(1,1,1), borderRadius: 5
-  });
-
-  const title = "ENTREGA DE NOTIFICAÇÕES - JUDICIAL";
-  const titleWidth = fontBold.widthOfTextAtSize(title, CONFIG.fontSize.title);
-  const titleX = rectX + (rectWidth - titleWidth) / 2;
-
-  firstPage.drawText(title, {
-    x: titleX, y: rectY + CONFIG.maxRectHeight - 20, size: CONFIG.fontSize.title, font: fontBold
-  });
-
-  drawTextBlock(firstPage, rectX, rectY + CONFIG.maxRectHeight, totalLines, fontBold, fontRegular);
-
-  await processImages(newPdfDoc, firstPage, rectY);
-
-  return await newPdfDoc.save();
-}
-
-document.getElementById("previewBtn").addEventListener("click", async () => {
-  try {
-    const bytes = await gerarPdfFinal();
-    const blob = new Blob([bytes], {type: "application/pdf"});
-    document.getElementById("previewFrame").src = URL.createObjectURL(blob);
-  } catch(e) { showMessage(e.message); }
-});
-
-document.getElementById("downloadBtn").addEventListener("click", async () => {
-  try {
-    const bytes = await gerarPdfFinal();
-    const blob = new Blob([bytes], {type: "application/pdf"});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Notificacao_Campo_Mourao.pdf";
-    link.click();
-  } catch(e) { showMessage(e.message); }
-});
-
-document.getElementById("clearBtn").addEventListener("click", () => location.reload());
-
-document.querySelectorAll('.presetPhrase').forEach(cb => {
-  cb.addEventListener('change', () => {
-    const textArea = document.getElementById('ocorrencia');
-    const selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text);
-    textArea.value = selected.join('\n');
-  });
+    const themeSelect = document.getElementById('themeSelect');
+    themeSelect.addEventListener('change', (e) => {
+        document.body.className = '';
+        if (e.target.value !== 'default') document.body.classList.add('theme-' + e.target.value);
+        localStorage.setItem('selectedTheme', e.target.value);
+    });
+    const saved = localStorage.getItem('selectedTheme') || 'default';
+    if(saved !== 'default') document.body.classList.add('theme-' + saved);
+    themeSelect.value = saved;
 });
 </script>
 </body>
