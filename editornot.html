@@ -497,10 +497,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    document.getElementById('themeSelect').addEventListener('change', (e) => {
-        document.body.className = e.target.value === 'default' ? '' : 'theme-' + e.target.value;
+    // Salva e aplica o tema ao mudar o select
+document.getElementById('themeSelect').addEventListener('change', (e) => {
+    const selectedTheme = e.target.value;
+    
+    // Aplica o tema visualmente
+    document.body.className = selectedTheme === 'default' ? '' : 'theme-' + selectedTheme;
+    
+    // Salva a escolha no navegador
+    localStorage.setItem('selectedTheme', selectedTheme);
     });
 });
 </script>
 </body>
 </html>
+
