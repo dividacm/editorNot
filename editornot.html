@@ -196,6 +196,12 @@
 document.addEventListener("DOMContentLoaded", () => {
     let pdfJsDoc = null;
     const AppState = { pdfBuffer: null, images: [], isProcessing: false };
+    // Recupera o tema salvo ao carregar a página
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+    document.getElementById('themeSelect').value = savedTheme;
+    document.body.className = savedTheme === 'default' ? '' : 'theme-' + savedTheme;
+    }
     const CONFIG = {
       margins: { left: 41, right: 41, top: 30, bottom: 40 },
       fontSize: { title: 11, label: 10, content: 10 },
@@ -511,4 +517,5 @@ document.getElementById('themeSelect').addEventListener('change', (e) => {
 </script>
 </body>
 </html>
+
 
