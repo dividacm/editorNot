@@ -195,7 +195,11 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     let pdfJsDoc = null;
-    const AppState = { pdfBuffer: null, images: [], isProcessing: false };
+    const AppState = { pdfBuffer: null, 
+    pdfName: "Notificacao.pdf", // Valor padrão caso algo falhe
+    images: [], 
+    isProcessing: false };
+    
     // Recupera o tema salvo ao carregar a página
     const savedTheme = localStorage.getItem('selectedTheme');
     if (savedTheme) {
@@ -240,7 +244,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     try {
         AppState.pdfBuffer = await file.arrayBuffer();
-
+        AppState.pdfName = file.name; /
+        
         // 🔹 pdf.js (leitura de texto)
         pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfBuffer }).promise;
 
@@ -452,7 +457,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const bytes = await gerarPdfBytes();
             const blob = new Blob([bytes], { type: "application/pdf" });
-            const fileName = "Notificacao_Gerada.pdf";
+            const fileName = AppState.pdfName;
 
             // Verifica se o navegador suporta a API de escolha de arquivo
             if ('showSaveFilePicker' in window) {
@@ -517,5 +522,6 @@ document.getElementById('themeSelect').addEventListener('change', (e) => {
 </script>
 </body>
 </html>
+
 
 
