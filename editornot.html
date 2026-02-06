@@ -22,33 +22,29 @@
 
     /* --- TEMAS PERSONALIZADOS --- */
     
-    /* Tema Ouro */
     body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; }
-    
-    /* Tema Rosa */
     body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; }
-    
-    /* Tema Roxo */
     body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
     
     /* --- TEMA PALMEIRAS (VERDÃO) --- */
     body.theme-palmeiras { 
         --primary-color: #006437; 
         --primary-hover: #044427; 
-        --bg-body: #d1e7dd;       
+        --bg-body: #d1e7dd; /* Fundo verde suave */
         --bg-card: #ffffff;
         --border-color: #badbcc;  
         --input-bg: #f8fcf9;      
         --drop-zone-border: #006437;
     }
-    /* Escudo na barra de botões */
+    
+    /* Escudo na barra de botões - PALMEIRAS */
     body.theme-palmeiras .button-row {
         background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg');
         background-repeat: no-repeat;
-        background-position: right 10px center; /* Alinhado à direita */
-        background-size: 40px; /* Tamanho do escudo */
-        padding-right: 60px; /* Espaço para não cobrir o escudo */
-        border: 1px solid #006437; /* Borda verde extra */
+        background-position: right 15px center; /* Alinhado à direita com margem */
+        background-size: 42px; /* Tamanho do escudo */
+        padding-right: 70px; /* Empurra os botões para não cobrir o escudo */
+        border: 1px solid #006437;
     }
 
     /* --- TEMA SÃO PAULO (TRICOLOR) --- */
@@ -62,21 +58,25 @@
         --input-bg: #fff5f5;      
         --drop-zone-border: #df2128;
     }
+
+    /* Escudo na barra de botões - SÃO PAULO */
+    body.theme-saopaulo .button-row {
+        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png');
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 40px;
+        padding-right: 70px;
+        border-top: 3px solid #df2128;
+        border-bottom: 3px solid #000000;
+        border-left: 1px solid #dcdde6;
+        border-right: 1px solid #dcdde6;
+    }
+    
     body.theme-saopaulo .form-container {
         border-top: 4px solid #df2128;
         border-bottom: 4px solid #000000;
     }
-    /* Escudo na barra de botões */
-    body.theme-saopaulo .button-row {
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png');
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 38px;
-        padding-right: 60px;
-        border: 1px solid #df2128; /* Borda vermelha extra */
-    }
 
-    /* Tema Escuro */
     body.theme-dark {
         --primary-color: #4a9eff; --primary-hover: #0077cc;
         --bg-body: #121212; --bg-card: #1e1e1e;
@@ -87,66 +87,66 @@
     /* --- ESTILOS GERAIS --- */
     html, body {
         height: 100%; margin: 0; padding: 0; overflow: hidden;
-        font-family: var(--font-family); background: var(--bg-body); color: var(--text-main);
-        transition: background 0.3s ease, color 0.3s ease; 
+        font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main);
+        transition: background 0.3s ease;
     }
+    
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
     
     .form-container {
         background: var(--bg-card); padding: 10px; border-radius: var(--border-radius);
         width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box;
-        border: 1px solid var(--border-color); 
+        border: 1px solid var(--border-color);
     }
     .form-container::-webkit-scrollbar { width: 8px; }
     .form-container::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 4px; }
+    
     .preview-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; }
-    #previewFrame { 
-        flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius);
-        background: #525659; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+    .button-row { 
+        display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; 
+        background: var(--bg-card); padding: 8px; border-radius: var(--border-radius);
+        border: 1px solid var(--border-color); flex-shrink: 0;
+        transition: all 0.3s ease;
     }
+
     @media (max-width: 800px) {
         html, body { overflow: auto; height: auto; }
         #container { flex-direction: column; height: auto; }
         .form-container { width: 100%; height: auto; overflow-y: visible; }
         .preview-container { height: 600px; }
     }
+    
     .theme-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
     .theme-selector select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); cursor: pointer; font-weight: bold; }
 
     fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
     legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
-    label { display: block; margin-top: 5px; font-weight: 500; font-size: 0.9rem; }
+    label { display: block; margin-top: 5px; font-weight: 600; font-size: 0.9rem; }
+    
     input:not([type="checkbox"]), textarea, select {
         width: 100%; padding: 5px; margin-top: 3px; border: 1px solid var(--border-color);
         background: var(--input-bg); color: var(--text-main); border-radius: 6px; box-sizing: border-box;
         font-size: 0.95rem; transition: border-color 0.2s;
     }
     input:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0,0,0,0.05); }
-    button {
-        padding: 6px 12px; border: none; background: var(--primary-color); color: #fff;
-        border-radius: 6px; cursor: pointer; transition: all 0.2s;
-        font-weight: 500; font-size: 0.95rem; margin-top: 10px;
-    }
+    
+    button { padding: 6px 12px; border: none; background: var(--primary-color); color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 500; font-size: 0.95rem; margin-top: 10px; }
     button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    
     .checkbox-label { display: flex !important; align-items: flex-start; margin-top: 8px !important; cursor: pointer; font-size: 0.9rem; }
     .checkbox-label input[type="checkbox"] { width: 14px !important; height: 18px; margin-right: 10px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
-    .drop-zone {
-        border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius);
-        padding: 10px; text-align: center; background: var(--drop-zone-bg);
-        transition: all 0.2s ease; cursor: pointer; position: relative;
-    }
-    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--primary-color); background: rgba(0, 0, 0, 0.03); }
+    
+    .drop-zone { border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius); padding: 10px; text-align: center; background: var(--drop-zone-bg); transition: all 0.2s ease; cursor: pointer; position: relative; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--primary-color); background: rgba(0, 0, 0, 0.05); }
     .drop-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    
     .img-tag { background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; margin-top: 5px; display: inline-block; }
-    .button-row { 
-        display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; 
-        background: var(--bg-card); padding: 8px; border-radius: var(--border-radius);
-        border: 1px solid var(--border-color); flex-shrink: 0;
-        transition: all 0.3s ease; /* Transição suave do fundo */
-    }
+    
     #messageBox { margin-top: 10px; padding: 10px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; text-align: center; font-size: 0.9rem; }
-    #statusIndicator { font-size: 0.85rem; color: var(--primary-color); margin-left: auto; font-style: italic; font-weight: bold;}
+    #statusIndicator { font-size: 0.85rem; color: var(--primary-color); margin-left: auto; font-style: italic; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -223,8 +223,8 @@
             <option value="gold">🟡 Dourado</option>
             <option value="pink">🌸 Rosa</option>
             <option value="purple">🟣 Roxo</option>
-            <option value="palmeiras">🐷 Palmeiras</option>
-            <option value="saopaulo">🇾🇪 São Paulo</option>
+            <option value="palmeiras">🐷 Verdão</option>
+            <option value="saopaulo">Tricolor</option>
             <option value="dark">🌑 Modo Escuro</option>
         </select>
       </div>
@@ -246,33 +246,25 @@ document.addEventListener("DOMContentLoaded", () => {
         isProcessing: false 
     };
 
-    // --- LÓGICA DE TEMAS ---
+    // --- TEMAS ---
     const themeSelect = document.getElementById('themeSelect');
     const applyTheme = (themeName) => {
-        // Remove todas as classes de tema anteriores
         document.body.className = '';
         if (themeName !== 'default') {
             document.body.classList.add('theme-' + themeName);
         }
     };
-
     const savedTheme = localStorage.getItem('selectedTheme');
-    if (savedTheme) {
-        themeSelect.value = savedTheme;
-        applyTheme(savedTheme);
-    }
-
+    if (savedTheme) { themeSelect.value = savedTheme; applyTheme(savedTheme); }
     themeSelect.addEventListener('change', (e) => {
-        const selected = e.target.value;
-        applyTheme(selected);
-        localStorage.setItem('selectedTheme', selected);
+        applyTheme(e.target.value);
+        localStorage.setItem('selectedTheme', e.target.value);
     });
 
     // --- CONFIGURAÇÃO PDF ---
     const CONFIG = {
       margins: { left: 41, right: 41, top: 30, bottom: 40 },
       fontSize: { title: 11, label: 10, content: 10 },
-      spacing: { label: 12 },
       maxRectHeight: 160
     };
 
@@ -301,22 +293,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function loadPdfFile(file) {
-        if (!file || file.type !== 'application/pdf') {
-            showMessage("Selecione um PDF válido.");
-            return;
-        }
+        if (!file || file.type !== 'application/pdf') { showMessage("Selecione um PDF válido."); return; }
         try {
             AppState.pdfBuffer = await file.arrayBuffer();
             AppState.pdfName = file.name; 
-            
             pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfBuffer }).promise;
-
             document.getElementById("fileInfo").style.display = "block";
             document.getElementById("fileInfo").textContent = `✅ ${file.name}`;
             triggerPreviewUpdate();
-        } catch (e) {
-            showMessage("Erro: " + e.message);
-        }
+        } catch (e) { showMessage("Erro: " + e.message); }
     }
 
     async function findTextPosition(pdf, searchText) {
@@ -346,73 +331,143 @@ document.addEventListener("DOMContentLoaded", () => {
         triggerPreviewUpdate();
     }
 
+    // --- LÓGICA PRINCIPAL DE GERAÇÃO ---
     async function gerarPdfBytes() {
         if (!AppState.pdfBuffer) throw new Error("PDF base não carregado.");
         const pdfDoc = await PDFLib.PDFDocument.load(AppState.pdfBuffer);
+        
+        // Mantém apenas a página 1 original
         while (pdfDoc.getPageCount() > 1) { pdfDoc.removePage(1); }
 
-        const page1 = pdfDoc.getPages()[0];
-        const { width, height } = page1.getSize();
         const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
         const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
 
+        // -- 1. Localizar Frase --
         const phrase = "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB";
-        let anchorY = height - 120; 
+        let foundOnPage1 = false;
+        let anchorY = 0;
 
         if (pdfJsDoc) {
             const pos = await findTextPosition(pdfJsDoc, phrase);
-            if (pos && pos.page === 0) { anchorY = pos.y - 12; }
+            if (pos && pos.page === 0) {
+                foundOnPage1 = true;
+                anchorY = pos.y - 12; // Espaço abaixo da frase
+            }
         }
 
-        const rectWidth = width - (CONFIG.margins.left * 2);
-        const rectX = CONFIG.margins.left;
-        const rectY = anchorY - CONFIG.maxRectHeight;
+        const width = pdfDoc.getPages()[0].getWidth();
+        const height = pdfDoc.getPages()[0].getHeight();
 
-        page1.drawRectangle({
-            x: rectX, y: rectY, width: rectWidth, height: CONFIG.maxRectHeight,
-            borderWidth: 1, borderColor: PDFLib.rgb(0, 0, 0), color: PDFLib.rgb(1, 1, 1)
-        });
+        // -- 2. Definir onde desenhar o quadro --
+        let boxPage;
+        let boxRectY;
 
-        const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-        const titleWidth = fontBold.widthOfTextAtSize(title, 11);
-        page1.drawText(title, { x: rectX + (rectWidth - titleWidth) / 2, y: rectY + CONFIG.maxRectHeight - 20, size: 11, font: fontBold });
+        if (foundOnPage1) {
+            // Cenário A: Achou na pag 1 -> Desenha nela
+            boxPage = pdfDoc.getPages()[0];
+            boxRectY = anchorY - CONFIG.maxRectHeight;
+        } else {
+            // Cenário B: Não achou -> Cria pag 2 e desenha no topo
+            boxPage = pdfDoc.addPage([width, height]);
+            boxRectY = height - CONFIG.margins.top - CONFIG.maxRectHeight;
+        }
 
-        const fields = [
-            { label: "Telefone(s):", value: document.getElementById('telefone').value },
-            { label: "Nome(s):", value: document.getElementById('nomeContato').value },
-            { label: "Endereço:", value: document.getElementById('endereco').value },
-            { label: "Ocorrência/Parecer:", value: document.getElementById('ocorrencia').value }
-        ].filter(f => f.value.trim());
+        // -- 3. Desenhar o Quadro (Função Helper) --
+        const drawNotificationBox = (page, x, y) => {
+            const rectWidth = width - (CONFIG.margins.left * 2);
+            
+            // Fundo Branco
+            page.drawRectangle({
+                x: x, y: y, width: rectWidth, height: CONFIG.maxRectHeight,
+                borderWidth: 1, borderColor: PDFLib.rgb(0, 0, 0), color: PDFLib.rgb(1, 1, 1)
+            });
 
-        let yCursorText = rectY + CONFIG.maxRectHeight - 40;
-        fields.forEach(f => {
-            page1.drawText(f.label, { x: rectX + 10, y: yCursorText, size: 10, font: fontBold });
-            page1.drawText(f.value, { x: rectX + 110, y: yCursorText, size: 10, font: fontRegular, maxWidth: rectWidth - 120 });
-            yCursorText -= 14;
-        });
+            // Título
+            const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
+            const titleWidth = fontBold.widthOfTextAtSize(title, 11);
+            page.drawText(title, {
+                x: x + (rectWidth - titleWidth) / 2,
+                y: y + CONFIG.maxRectHeight - 20,
+                size: 11, font: fontBold
+            });
 
+            // Campos
+            const fields = [
+                { label: "Telefone(s):", value: document.getElementById('telefone').value },
+                { label: "Nome(s):", value: document.getElementById('nomeContato').value },
+                { label: "Endereço:", value: document.getElementById('endereco').value },
+                { label: "Ocorrência/Parecer:", value: document.getElementById('ocorrencia').value }
+            ].filter(f => f.value.trim());
+
+            let yCursorText = y + CONFIG.maxRectHeight - 40;
+            fields.forEach(f => {
+                page.drawText(f.label, { x: x + 10, y: yCursorText, size: 10, font: fontBold });
+                
+                // Desenha o valor com lineHeight ajustado
+                page.drawText(f.value, { 
+                    x: x + 110, 
+                    y: yCursorText, 
+                    size: 10, 
+                    font: fontRegular, 
+                    maxWidth: rectWidth - 120,
+                    lineHeight: 12 // <--- Espaçamento entre linhas reduzido
+                });
+                
+                yCursorText -= 14;
+            });
+        };
+
+        // Executa o desenho do quadro
+        drawNotificationBox(boxPage, CONFIG.margins.left, boxRectY);
+
+        // -- 4. Desenhar Imagens --
         if (AppState.images.length > 0) {
-            let currentPage = null;
-            let imageIndexOnPage = 0;
-            let imgY = 0;
+            let currentPage;
+            let currentYCursor;
+
+            // Define o ponto de partida das imagens
+            if (foundOnPage1) {
+                // Cenário A: Imagens começam numa página nova e limpa
+                currentPage = null; 
+                currentYCursor = -999; 
+            } else {
+                // Cenário B: Imagens começam NA MESMA página do quadro (Pag 2)
+                currentPage = boxPage;
+                currentYCursor = boxRectY - 20; // Começa logo abaixo do quadro
+            }
+
             const imgMaxWidth = width - (CONFIG.margins.left * 2);
-            const imgMaxHeight = (height - 120) / 2;
+            const imgMaxHeight = 350; 
 
             for (let i = 0; i < AppState.images.length; i++) {
-                if (imageIndexOnPage === 0) {
-                    currentPage = pdfDoc.addPage([width, height]);
-                    imgY = height - 60;
-                }
                 const imgBytes = await AppState.images[i].arrayBuffer();
-                const img = AppState.images[i].type === "image/png" ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+                let img;
+                if (AppState.images[i].type === "image/png") {
+                    img = await pdfDoc.embedPng(imgBytes);
+                } else {
+                    img = await pdfDoc.embedJpg(imgBytes);
+                }
+
                 const scale = Math.min(imgMaxWidth / img.width, imgMaxHeight / img.height);
                 const imgW = img.width * scale;
                 const imgH = img.height * scale;
-                currentPage.drawImage(img, { x: (width - imgW) / 2, y: imgY - imgH, width: imgW, height: imgH });
-                imgY -= imgH + 20;
-                imageIndexOnPage = (imageIndexOnPage + 1) % 2;
+
+                if (!currentPage || (currentYCursor - imgH < CONFIG.margins.bottom)) {
+                    currentPage = pdfDoc.addPage([width, height]);
+                    currentYCursor = height - CONFIG.margins.top;
+                }
+
+                currentPage.drawImage(img, {
+                    x: (width - imgW) / 2, 
+                    y: currentYCursor - imgH,
+                    width: imgW,
+                    height: imgH
+                });
+
+                currentYCursor -= (imgH + 20);
             }
         }
+
         return await pdfDoc.save();
     }
 
@@ -427,25 +482,15 @@ document.addEventListener("DOMContentLoaded", () => {
         finally { setStatus(""); }
     }, 800);
 
-    // --- EVENTOS ---
+    // Eventos
     document.querySelectorAll('.auto-update').forEach(input => input.addEventListener('input', triggerPreviewUpdate));
-    document.getElementById("pdfDropZone").addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); });
-    document.getElementById("pdfDropZone").addEventListener('dragleave', (e) => e.currentTarget.classList.remove('drag-over'));
-    document.getElementById("pdfDropZone").addEventListener('drop', (e) => { 
-        e.preventDefault(); 
-        e.currentTarget.classList.remove('drag-over');
-        loadPdfFile(e.dataTransfer.files[0]); 
-    });
+    document.getElementById("pdfDropZone").addEventListener('drop', (e) => { e.preventDefault(); loadPdfFile(e.dataTransfer.files[0]); });
+    document.getElementById("pdfDropZone").addEventListener('dragover', (e) => e.preventDefault());
     document.getElementById("fileInput").addEventListener('change', (e) => loadPdfFile(e.target.files[0]));
-    
-    document.getElementById("imgDropZone").addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); });
-    document.getElementById("imgDropZone").addEventListener('dragleave', (e) => e.currentTarget.classList.remove('drag-over'));
-    document.getElementById("imgDropZone").addEventListener('drop', (e) => { 
-        e.preventDefault(); 
-        e.currentTarget.classList.remove('drag-over');
-        handleImageFiles(e.dataTransfer.files); 
-    });
+    document.getElementById("imgDropZone").addEventListener('drop', (e) => { e.preventDefault(); handleImageFiles(e.dataTransfer.files); });
+    document.getElementById("imgDropZone").addEventListener('dragover', (e) => e.preventDefault());
     document.getElementById("imgInput").addEventListener('change', (e) => handleImageFiles(e.target.files));
+    document.getElementById("clearBtn").addEventListener("click", () => location.reload());
 
     document.querySelectorAll('.presetPhrase').forEach(cb => {
         cb.addEventListener('change', () => {
@@ -461,39 +506,25 @@ document.addEventListener("DOMContentLoaded", () => {
             const bytes = await gerarPdfBytes();
             const blob = new Blob([bytes], { type: "application/pdf" });
             const fileName = AppState.pdfName;
-
             if ('showSaveFilePicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: fileName,
-                        types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }],
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    return;
+                    const handle = await window.showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]});
+                    const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
                 } catch (err) { if (err.name === 'AbortError') return; }
             }
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.click();
-        } catch (e) { showMessage("Erro ao baixar: " + e.message); }
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
+        } catch (e) { showMessage("Erro: " + e.message); }
     });
 
-    document.getElementById("clearBtn").addEventListener("click", () => location.reload());
-
+    // Mascaras
     document.getElementById('telefone').addEventListener('input', function(e){
         let v = e.target.value.replace(/\D/g,'');
         if(v.length>11) v=v.slice(0,11);
         if(v.length>10) e.target.value=`(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
         else if(v.length>2) e.target.value=`(${v.slice(0,2)}) ${v.slice(2)}`;
     });
-
     ['nomeContato', 'endereco'].forEach(id => {
-        document.getElementById(id).addEventListener('input', function() {
-            this.value = this.value.replace(/(?:^|\s)\S/g, a => a.toUpperCase());
-        });
+        document.getElementById(id).addEventListener('input', function() { this.value = this.value.replace(/(?:^|\s)\S/g, a => a.toUpperCase()); });
     });
 });
 </script>
