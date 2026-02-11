@@ -20,136 +20,55 @@
         --drop-zone-border: #cbd5e0;
     }
 
-    /* --- TEMAS PERSONALIZADOS --- */
-    
+    /* --- TEMAS --- */
     body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; }
     body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; }
     body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
-    
-    /* --- TEMA PALMEIRAS (VERDÃO) --- */
-    body.theme-palmeiras { 
-        --primary-color: #006437; 
-        --primary-hover: #044427; 
-        --bg-body: #d1e7dd; /* Fundo verde suave */
-        --bg-card: #ffffff;
-        --border-color: #badbcc;  
-        --input-bg: #f8fcf9;      
-        --drop-zone-border: #006437;
-    }
-    
-    /* Escudo na barra de botões - PALMEIRAS */
-    body.theme-palmeiras .button-row {
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg');
-        background-repeat: no-repeat;
-        background-position: right 15px center; /* Alinhado à direita com margem */
-        background-size: 42px; /* Tamanho do escudo */
-        padding-right: 70px; /* Empurra os botões para não cobrir o escudo */
-        border: 1px solid #006437;
-    }
+    body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #d1e7dd; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
+    body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
+    body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border: #444; }
 
-    /* --- TEMA SÃO PAULO (TRICOLOR) --- */
-    body.theme-saopaulo { 
-        --primary-color: #df2128; 
-        --primary-hover: #000000; 
-        --bg-body: #a81826;       
-        --bg-card: #ffffff;
-        --text-main: #000000;     
-        --border-color: #000000;  
-        --input-bg: #fff5f5;      
-        --drop-zone-border: #df2128;
-    }
-
-    /* Escudo na barra de botões - SÃO PAULO */
-    body.theme-saopaulo .button-row {
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png');
-        background-repeat: no-repeat;
-        background-position: right 15px center;
-        background-size: 40px;
-        padding-right: 70px;
-        border-top: 3px solid #df2128;
-        border-bottom: 3px solid #000000;
-        border-left: 1px solid #dcdde6;
-        border-right: 1px solid #dcdde6;
-    }
-    
-    body.theme-saopaulo .form-container {
-        border-top: 4px solid #df2128;
-        border-bottom: 4px solid #000000;
-    }
-
-    body.theme-dark {
-        --primary-color: #4a9eff; --primary-hover: #0077cc;
-        --bg-body: #121212; --bg-card: #1e1e1e;
-        --text-main: #e0e0e0; --border-color: #333;
-        --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border: #444;
-    }
+    /* Estilos Temas Específicos */
+    body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
+    body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
 
     /* --- ESTILOS GERAIS --- */
-    html, body {
-        height: 100%; margin: 0; padding: 0; overflow: hidden;
-        font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main);
-        transition: background 0.3s ease;
-    }
-    
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
-    
-    .form-container {
-        background: var(--bg-card); padding: 10px; border-radius: var(--border-radius);
-        width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box;
-        border: 1px solid var(--border-color);
-    }
-    .form-container::-webkit-scrollbar { width: 8px; }
-    .form-container::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 4px; }
-    
+    .form-container { background: var(--bg-card); padding: 10px; border-radius: var(--border-radius); width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box; border: 1px solid var(--border-color); }
     .preview-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; }
-    #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; }
 
-    .button-row { 
-        display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; 
-        background: var(--bg-card); padding: 8px; border-radius: var(--border-radius);
-        border: 1px solid var(--border-color); flex-shrink: 0;
-        transition: all 0.3s ease;
-    }
-
-    @media (max-width: 800px) {
-        html, body { overflow: auto; height: auto; }
-        #container { flex-direction: column; height: auto; }
-        .form-container { width: 100%; height: auto; overflow-y: visible; }
-        .preview-container { height: 600px; }
-    }
+    .button-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; background: var(--bg-card); padding: 8px; border-radius: var(--border-radius); border: 1px solid var(--border-color); flex-shrink: 0; }
     
-    .theme-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
-    .theme-selector select { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); cursor: pointer; font-weight: bold; }
+    /* --- LISTA DE IMAGENS (DRAGGABLE) --- */
+    #imgListContainer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .img-tag { 
+        background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; 
+        font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab;
+        user-select: none; border: 1px solid rgba(0,0,0,0.1);
+    }
+    .img-tag:active { cursor: grabbing; }
+    .img-tag .remove-img { 
+        cursor: pointer; font-weight: bold; background: rgba(0,0,0,0.2); 
+        border-radius: 50%; width: 16px; height: 16px; display: flex; 
+        align-items: center; justify-content: center; font-size: 12px;
+    }
+    .img-tag .remove-img:hover { background: #ff4d4d; }
+    .img-tag.dragging { opacity: 0.5; border: 1px dashed #fff; }
 
     fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
     legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
     label { display: block; margin-top: 5px; font-weight: 600; font-size: 0.9rem; }
-    
-    input:not([type="checkbox"]), textarea, select {
-        width: 100%; padding: 5px; margin-top: 3px; border: 1px solid var(--border-color);
-        background: var(--input-bg); color: var(--text-main); border-radius: 6px; box-sizing: border-box;
-        font-size: 0.95rem; transition: border-color 0.2s;
-    }
-    input:focus, textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(0,0,0,0.05); }
-    
-    button { padding: 6px 12px; border: none; background: var(--primary-color); color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 500; font-size: 0.95rem; margin-top: 10px; }
-    button:hover { background: var(--primary-hover); transform: translateY(-1px); }
-    
-    .checkbox-label { display: flex !important; align-items: flex-start; margin-top: 8px !important; cursor: pointer; font-size: 0.9rem; }
-    .checkbox-label input[type="checkbox"] { width: 14px !important; height: 18px; margin-right: 10px; margin-top: 2px; flex-shrink: 0; cursor: pointer; }
-    
-    .drop-zone { border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius); padding: 10px; text-align: center; background: var(--drop-zone-bg); transition: all 0.2s ease; cursor: pointer; position: relative; }
-    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--primary-color); background: rgba(0, 0, 0, 0.05); }
+    input:not([type="checkbox"]), textarea, select { width: 100%; padding: 5px; margin-top: 3px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 6px; box-sizing: border-box; }
+    button { padding: 6px 12px; border: none; background: var(--primary-color); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .drop-zone { border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius); padding: 10px; text-align: center; background: var(--drop-zone-bg); cursor: pointer; position: relative; }
     .drop-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    
-    .img-tag { background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; margin-top: 5px; display: inline-block; }
-    
-    #messageBox { margin-top: 10px; padding: 10px; border-radius: var(--border-radius); background: #fdd; color: #900; display: none; text-align: center; font-size: 0.9rem; }
-    #statusIndicator { font-size: 0.85rem; color: var(--primary-color); margin-left: auto; font-style: italic; font-weight: bold; }
+    #messageBox { margin-top: 10px; padding: 10px; border-radius: var(--border-radius); display: none; text-align: center; }
+    #statusIndicator { font-size: 0.85rem; color: var(--primary-color); margin-left: auto; font-weight: bold; }
     </style>
 </head>
-<body>
+<body class="theme-default">
 
 <div id="container">
   <div class="form-container">
@@ -164,25 +83,11 @@
       <label>Ocorrência:</label>
       <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
       
-      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color);">
-        <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 6px;">Frases Rápidas</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <label class="checkbox-label" style="margin-top: 0 !important;">
-                <input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> WhatsApp enviado
-            </label>
-            <label class="checkbox-label" style="margin-top: 0 !important;">
-                <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega nos dias, foi deixada a notificação. Comprovante em anexo."> Cadastro incompleto
-            </label>
-            <label class="checkbox-label" style="margin-top: 0 !important;">
-                <input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário. Comprovante em anexo."> Terreno baldio
-            </label>
-            <label class="checkbox-label" style="margin-top: 0 !important;">
-                <input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa
-            </label>
-            <label class="checkbox-label" style="margin-top: 0 !important; grid-column: span 2;">
-                <input type="checkbox" class="presetPhrase" data-text="Tentativa de contato via WhatsApp sem sucesso e não encontrada empresa/socio no endereço cadastrado. Não foi possível notificar."> Empresa fechada
-            </label>
-        </div>
+      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> WhatsApp</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega, foi deixada a notificação."> Incompleto</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário."> Terreno</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
       </div>
     </fieldset>
 
@@ -190,44 +95,40 @@
       <legend>Arquivo PDF Original</legend>
       <div class="drop-zone" id="pdfDropZone">
           <input type="file" id="fileInput" accept="application/pdf">
-          <div style="font-size: 16px;"></div>
-          <p><strong>Clique ou Arraste</strong><br> PDF aqui</p>
+          <p><strong>PDF</strong><br>Clique ou Arraste</p>
       </div>
-      <div id="fileInfo" style="margin-top: 8px; font-size: 0.85rem; color: #2e7d32; font-weight: bold; display: none;">Arquivo carregado!</div>
+      <div id="fileInfo" style="margin-top: 8px; font-size: 0.85rem; color: #2e7d32; font-weight: bold; display: none;"></div>
     </fieldset>
 
     <fieldset>
-      <legend>Anexos</legend>
+      <legend>Anexos (Arraste para ordenar)</legend>
       <div class="drop-zone" id="imgDropZone">
           <input type="file" id="imgInput" accept="image/*" multiple>
-          <div style="font-size: 16px;"></div>
-          <p><strong>Clique ou Arraste</strong><br>Imagens aqui</p>
+          <p><strong>Imagens</strong><br>Clique ou Arraste</p>
       </div>
-      <div id="imgListContainer" style="margin-top: 8px;"></div>
+      <div id="imgListContainer"></div>
     </fieldset>
 
     <div id="messageBox"></div>
-    <div style="margin-top: auto; padding-top: 6px;">
+    <div style="margin-top: auto;">
         <button id="clearBtn" style="width: 100%; background: #d32f2f;">Limpar Tudo</button>
     </div>
   </div>
 
   <div class="preview-container">
     <div class="button-row">
-      <button id="previewBtn" style="margin:0;">🔄 Atualizar</button>
-      <button id="downloadBtn" style="margin:0; background: #2e0404;">💾 Download</button>
+      <button id="previewBtn">🔄 Atualizar</button>
+      <button id="downloadBtn" style="background: #2e0404;">💾 Download</button>
       <span id="statusIndicator"></span>
-      <div class="theme-selector">
-        <select id="themeSelect">
-            <option value="default">🔵 Padrão</option>
-            <option value="gold">🟡 Dourado</option>
-            <option value="pink">🌸 Rosa</option>
-            <option value="purple">🟣 Roxo</option>
-            <option value="palmeiras">🐷 Verdão</option>
-            <option value="saopaulo">Tricolor</option>
-            <option value="dark">🌑 Modo Escuro</option>
-        </select>
-      </div>
+      <select id="themeSelect" style="width: auto; margin: 0 10px;">
+          <option value="default">🔵 Padrão</option>
+          <option value="gold">🟡 Dourado</option>
+          <option value="pink">🌸 Rosa</option>
+          <option value="purple">🟣 Roxo</option>
+          <option value="palmeiras">🐷 Verdão</option>
+          <option value="saopaulo">🇾🇪 Tricolor</option>
+          <option value="dark">🌑 Modo Escuro</option>
+      </select>
     </div>
     <iframe id="previewFrame"></iframe>
   </div>
@@ -249,223 +150,168 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- TEMAS ---
     const themeSelect = document.getElementById('themeSelect');
     const applyTheme = (themeName) => {
-        document.body.className = '';
-        if (themeName !== 'default') {
-            document.body.classList.add('theme-' + themeName);
-        }
+        document.body.className = themeName === 'default' ? '' : 'theme-' + themeName;
     };
-    const savedTheme = localStorage.getItem('selectedTheme');
-    if (savedTheme) { themeSelect.value = savedTheme; applyTheme(savedTheme); }
     themeSelect.addEventListener('change', (e) => {
         applyTheme(e.target.value);
         localStorage.setItem('selectedTheme', e.target.value);
     });
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) { themeSelect.value = savedTheme; applyTheme(savedTheme); }
 
-    // --- CONFIGURAÇÃO PDF ---
-    const CONFIG = {
-      margins: { left: 41, right: 41, top: 30, bottom: 40 },
-      fontSize: { title: 11, label: 10, content: 10 },
-      maxRectHeight: 160
-    };
+    // --- CONFIGURAÇÃO ---
+    const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 }, maxRectHeight: 160 };
 
     function showMessage(msg, isError = true) {
-      const box = document.getElementById("messageBox");
-      box.textContent = msg;
-      box.style.background = isError ? "#fdd" : "#dfd";
-      box.style.color = isError ? "#900" : "#050";
-      box.style.display = "block";
-      setTimeout(() => box.style.display = "none", 4000);
+        const box = document.getElementById("messageBox");
+        box.textContent = msg;
+        box.style.display = "block";
+        box.style.background = isError ? "#fdd" : "#dfd";
+        setTimeout(() => box.style.display = "none", 3000);
     }
 
-    function debounce(func, wait) {
+    const debounce = (func, wait) => {
         let timeout;
-        return function(...args) {
+        return (...args) => {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
-    }
+    };
 
     function setStatus(msg) {
-        const indicator = document.getElementById('statusIndicator');
-        const btn = document.getElementById('previewBtn');
-        indicator.textContent = msg;
-        btn.textContent = msg ? "⏳..." : "🔄 Atualizar";
+        document.getElementById('statusIndicator').textContent = msg;
     }
 
-    async function loadPdfFile(file) {
-        if (!file || file.type !== 'application/pdf') { showMessage("Selecione um PDF válido."); return; }
-        try {
-            AppState.pdfBuffer = await file.arrayBuffer();
-            AppState.pdfName = file.name; 
-            pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfBuffer }).promise;
-            document.getElementById("fileInfo").style.display = "block";
-            document.getElementById("fileInfo").textContent = `✅ ${file.name}`;
-            triggerPreviewUpdate();
-        } catch (e) { showMessage("Erro: " + e.message); }
+    // --- GESTÃO DE IMAGENS (EXCLUIR E REORDENAR) ---
+    function renderImageList() {
+        const container = document.getElementById('imgListContainer');
+        container.innerHTML = '';
+        
+        AppState.images.forEach((img, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'img-tag';
+            tag.draggable = true;
+            tag.dataset.index = index;
+            tag.innerHTML = `${img.name} <span class="remove-img" title="Remover">×</span>`;
+            
+            // Botão remover
+            tag.querySelector('.remove-img').onclick = (e) => {
+                e.stopPropagation();
+                AppState.images.splice(index, 1);
+                renderImageList();
+                triggerPreviewUpdate();
+            };
+
+            // Drag and Drop (Reordenação)
+            tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
+            tag.addEventListener('dragend', () => {
+                tag.classList.remove('dragging');
+                reorderImages();
+            });
+
+            container.appendChild(tag);
+        });
+
+        container.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggingItem = document.querySelector('.dragging');
+            const siblings = [...container.querySelectorAll('.img-tag:not(.dragging)')];
+            let nextSibling = siblings.find(sibling => e.clientX <= sibling.offsetLeft + sibling.offsetWidth / 2);
+            container.insertBefore(draggingItem, nextSibling);
+        });
     }
 
-    async function findTextPosition(pdf, searchText) {
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const textContent = await page.getTextContent();
-            for (let item of textContent.items) {
-                if (item.str && item.str.includes(searchText)) {
-                    return { page: pageNum - 1, x: item.transform[4], y: item.transform[5] };
-                }
-            }
-        }
-        return null;
+    function reorderImages() {
+        const newOrder = [...document.querySelectorAll('.img-tag')].map(tag => AppState.images[tag.dataset.index]);
+        AppState.images = newOrder;
+        renderImageList();
+        triggerPreviewUpdate();
     }
 
     function handleImageFiles(files) {
         const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
         AppState.images.push(...newFiles);
-        const container = document.getElementById('imgListContainer');
-        container.innerHTML = '';
-        AppState.images.forEach(img => {
-            const tag = document.createElement('span');
-            tag.className = 'img-tag';
-            tag.textContent = img.name;
-            container.appendChild(tag);
-        });
+        renderImageList();
         triggerPreviewUpdate();
     }
 
-    // --- LÓGICA PRINCIPAL DE GERAÇÃO ---
+    // --- PDF LOGIC ---
+    async function loadPdfFile(file) {
+        if (!file || file.type !== 'application/pdf') return;
+        AppState.pdfBuffer = await file.arrayBuffer();
+        AppState.pdfName = file.name;
+        pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfBuffer }).promise;
+        document.getElementById("fileInfo").style.display = "block";
+        document.getElementById("fileInfo").textContent = `✅ ${file.name}`;
+        triggerPreviewUpdate();
+    }
+
+    async function findTextPosition(pdf, searchText) {
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const item = content.items.find(it => it.str.includes(searchText));
+            if (item) return { page: i - 1, y: item.transform[5] };
+        }
+        return null;
+    }
+
     async function gerarPdfBytes() {
-        if (!AppState.pdfBuffer) throw new Error("PDF base não carregado.");
+        if (!AppState.pdfBuffer) return null;
         const pdfDoc = await PDFLib.PDFDocument.load(AppState.pdfBuffer);
-        
-        // Mantém apenas a página 1 original
-        while (pdfDoc.getPageCount() > 1) { pdfDoc.removePage(1); }
+        while (pdfDoc.getPageCount() > 1) pdfDoc.removePage(1);
 
         const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-        const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const fontReg = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const page1 = pdfDoc.getPages()[0];
+        const { width, height } = page1.getSize();
 
-        // -- 1. Localizar Frase --
-        const phrase = "Gerência de Valores em Carteira e Cobrança/SEFIN-GCCOB";
-        let foundOnPage1 = false;
-        let anchorY = 0;
+        // Posição do quadro
+        const pos = await findTextPosition(pdfJsDoc, "Gerência de Valores em Carteira");
+        let boxPage = page1;
+        let boxY = pos ? pos.y - 12 - CONFIG.maxRectHeight : height - 50 - CONFIG.maxRectHeight;
+        
+        if (!pos) { boxPage = pdfDoc.addPage([width, height]); boxY = height - 50 - CONFIG.maxRectHeight; }
 
-        if (pdfJsDoc) {
-            const pos = await findTextPosition(pdfJsDoc, phrase);
-            if (pos && pos.page === 0) {
-                foundOnPage1 = true;
-                anchorY = pos.y - 12; // Espaço abaixo da frase
-            }
-        }
+        // Desenhar quadro
+        boxPage.drawRectangle({
+            x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: CONFIG.maxRectHeight,
+            borderWidth: 1, borderColor: PDFLib.rgb(0,0,0), color: PDFLib.rgb(1,1,1)
+        });
 
-        const width = pdfDoc.getPages()[0].getWidth();
-        const height = pdfDoc.getPages()[0].getHeight();
+        const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
+        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 11, font: fontBold });
 
-        // -- 2. Definir onde desenhar o quadro --
-        let boxPage;
-        let boxRectY;
+        const fields = [
+            { l: "Telefone(s):", v: document.getElementById('telefone').value },
+            { l: "Nome(s):", v: document.getElementById('nomeContato').value },
+            { l: "Endereço:", v: document.getElementById('endereco').value },
+            { l: "Ocorrência:", v: document.getElementById('ocorrencia').value }
+        ];
 
-        if (foundOnPage1) {
-            // Cenário A: Achou na pag 1 -> Desenha nela
-            boxPage = pdfDoc.getPages()[0];
-            boxRectY = anchorY - CONFIG.maxRectHeight;
-        } else {
-            // Cenário B: Não achou -> Cria pag 2 e desenha no topo
-            boxPage = pdfDoc.addPage([width, height]);
-            boxRectY = height - CONFIG.margins.top - CONFIG.maxRectHeight;
-        }
+        let cursorY = boxY + CONFIG.maxRectHeight - 40;
+        fields.forEach(f => {
+            boxPage.drawText(f.l, { x: CONFIG.margins.left + 10, y: cursorY, size: 10, font: fontBold });
+            boxPage.drawText(f.v, { x: CONFIG.margins.left + 100, y: cursorY, size: 10, font: fontReg, maxWidth: width - 260, lineHeight: 12 });
+            cursorY -= 15;
+        });
 
-        // -- 3. Desenhar o Quadro (Função Helper) --
-        const drawNotificationBox = (page, x, y) => {
-            const rectWidth = width - (CONFIG.margins.left * 2);
-            
-            // Fundo Branco
-            page.drawRectangle({
-                x: x, y: y, width: rectWidth, height: CONFIG.maxRectHeight,
-                borderWidth: 1, borderColor: PDFLib.rgb(0, 0, 0), color: PDFLib.rgb(1, 1, 1)
-            });
+        // Imagens
+        let imgPage = boxPage;
+        let imgY = boxY - 20;
 
-            // Título
-            const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-            const titleWidth = fontBold.widthOfTextAtSize(title, 11);
-            page.drawText(title, {
-                x: x + (rectWidth - titleWidth) / 2,
-                y: y + CONFIG.maxRectHeight - 20,
-                size: 11, font: fontBold
-            });
+        for (const file of AppState.images) {
+            const imgBytes = await file.arrayBuffer();
+            const img = file.type === "image/png" ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+            const dims = img.scaleToFit(width - 80, 350);
 
-            // Campos
-            const fields = [
-                { label: "Telefone(s):", value: document.getElementById('telefone').value },
-                { label: "Nome(s):", value: document.getElementById('nomeContato').value },
-                { label: "Endereço:", value: document.getElementById('endereco').value },
-                { label: "Ocorrência/Parecer:", value: document.getElementById('ocorrencia').value }
-            ].filter(f => f.value.trim());
-
-            let yCursorText = y + CONFIG.maxRectHeight - 40;
-            fields.forEach(f => {
-                page.drawText(f.label, { x: x + 10, y: yCursorText, size: 10, font: fontBold });
-                
-                // Desenha o valor com lineHeight ajustado
-                page.drawText(f.value, { 
-                    x: x + 110, 
-                    y: yCursorText, 
-                    size: 10, 
-                    font: fontRegular, 
-                    maxWidth: rectWidth - 120,
-                    lineHeight: 12 // <--- Espaçamento entre linhas reduzido
-                });
-                
-                yCursorText -= 14;
-            });
-        };
-
-        // Executa o desenho do quadro
-        drawNotificationBox(boxPage, CONFIG.margins.left, boxRectY);
-
-        // -- 4. Desenhar Imagens --
-        if (AppState.images.length > 0) {
-            let currentPage;
-            let currentYCursor;
-
-            // Define o ponto de partida das imagens
-            if (foundOnPage1) {
-                // Cenário A: Imagens começam numa página nova e limpa
-                currentPage = null; 
-                currentYCursor = -999; 
-            } else {
-                // Cenário B: Imagens começam NA MESMA página do quadro (Pag 2)
-                currentPage = boxPage;
-                currentYCursor = boxRectY - 20; // Começa logo abaixo do quadro
+            if (imgY - dims.height < CONFIG.margins.bottom) {
+                imgPage = pdfDoc.addPage([width, height]);
+                imgY = height - CONFIG.margins.top;
             }
 
-            const imgMaxWidth = width - (CONFIG.margins.left * 2);
-            const imgMaxHeight = 350; 
-
-            for (let i = 0; i < AppState.images.length; i++) {
-                const imgBytes = await AppState.images[i].arrayBuffer();
-                let img;
-                if (AppState.images[i].type === "image/png") {
-                    img = await pdfDoc.embedPng(imgBytes);
-                } else {
-                    img = await pdfDoc.embedJpg(imgBytes);
-                }
-
-                const scale = Math.min(imgMaxWidth / img.width, imgMaxHeight / img.height);
-                const imgW = img.width * scale;
-                const imgH = img.height * scale;
-
-                if (!currentPage || (currentYCursor - imgH < CONFIG.margins.bottom)) {
-                    currentPage = pdfDoc.addPage([width, height]);
-                    currentYCursor = height - CONFIG.margins.top;
-                }
-
-                currentPage.drawImage(img, {
-                    x: (width - imgW) / 2, 
-                    y: currentYCursor - imgH,
-                    width: imgW,
-                    height: imgH
-                });
-
-                currentYCursor -= (imgH + 20);
-            }
+            imgPage.drawImage(img, { x: width/2 - dims.width/2, y: imgY - dims.height, width: dims.width, height: dims.height });
+            imgY -= dims.height + 20;
         }
 
         return await pdfDoc.save();
@@ -473,59 +319,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const triggerPreviewUpdate = debounce(async () => {
         if (!AppState.pdfBuffer) return;
-        try {
-            setStatus("Gerando...");
-            const pdfBytes = await gerarPdfBytes();
-            const blob = new Blob([pdfBytes], {type: "application/pdf"});
-            document.getElementById("previewFrame").src = URL.createObjectURL(blob);
-        } catch (e) { console.error(e); } 
-        finally { setStatus(""); }
+        setStatus("⏳...");
+        const bytes = await gerarPdfBytes();
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        document.getElementById("previewFrame").src = URL.createObjectURL(blob);
+        setStatus("");
     }, 800);
 
     // Eventos
-    document.querySelectorAll('.auto-update').forEach(input => input.addEventListener('input', triggerPreviewUpdate));
-    document.getElementById("pdfDropZone").addEventListener('drop', (e) => { e.preventDefault(); loadPdfFile(e.dataTransfer.files[0]); });
-    document.getElementById("pdfDropZone").addEventListener('dragover', (e) => e.preventDefault());
-    document.getElementById("fileInput").addEventListener('change', (e) => loadPdfFile(e.target.files[0]));
-    document.getElementById("imgDropZone").addEventListener('drop', (e) => { e.preventDefault(); handleImageFiles(e.dataTransfer.files); });
-    document.getElementById("imgDropZone").addEventListener('dragover', (e) => e.preventDefault());
-    document.getElementById("imgInput").addEventListener('change', (e) => handleImageFiles(e.target.files));
-    document.getElementById("clearBtn").addEventListener("click", () => location.reload());
-
+    document.querySelectorAll('.auto-update').forEach(i => i.addEventListener('input', triggerPreviewUpdate));
+    document.getElementById("fileInput").onchange = (e) => loadPdfFile(e.target.files[0]);
+    document.getElementById("imgInput").onchange = (e) => handleImageFiles(e.target.files);
+    document.getElementById("clearBtn").onclick = () => location.reload();
+    document.getElementById("previewBtn").onclick = triggerPreviewUpdate;
+    
     document.querySelectorAll('.presetPhrase').forEach(cb => {
-        cb.addEventListener('change', () => {
-            const textArea = document.getElementById('ocorrencia');
-            const selected = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text);
-            textArea.value = selected.join('\n');
-            textArea.dispatchEvent(new Event('input'));
-        });
+        cb.onchange = () => {
+            const txt = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text).join('\n');
+            document.getElementById('ocorrencia').value = txt;
+            triggerPreviewUpdate();
+        };
     });
 
-    document.getElementById("downloadBtn").addEventListener("click", async () => {
+    // --- FUNÇÃO DOWNLOAD COM "SALVAR COMO" ---
+    document.getElementById("downloadBtn").onclick = async () => {
         try {
             const bytes = await gerarPdfBytes();
+            if (!bytes) { showMessage("Nenhum PDF gerado."); return; }
+            
             const blob = new Blob([bytes], { type: "application/pdf" });
-            const fileName = AppState.pdfName;
+            const suggestedName = AppState.pdfName || "Notificacao.pdf";
+
+            // Tenta usar a API moderna 'showSaveFilePicker' (Chrome, Edge, Opera)
             if ('showSaveFilePicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]});
-                    const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
-                } catch (err) { if (err.name === 'AbortError') return; }
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: suggestedName,
+                        types: [{
+                            description: 'Documento PDF',
+                            accept: { 'application/pdf': ['.pdf'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    return; // Sucesso, para por aqui
+                } catch (err) {
+                    // Se o usuário clicar em "Cancelar", apenas ignora
+                    if (err.name === 'AbortError') return;
+                    // Se der erro real, cai para o fallback abaixo
+                    console.warn("API de Salvar falhou, tentando método tradicional...", err);
+                }
             }
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = fileName; link.click();
-        } catch (e) { showMessage("Erro: " + e.message); }
-    });
 
-    // Mascaras
-    document.getElementById('telefone').addEventListener('input', function(e){
+            // Fallback: Método tradicional (download direto) para Firefox/Outros
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = suggestedName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (e) {
+            showMessage("Erro ao baixar: " + e.message);
+        }
+    };
+
+    // Mascaras simples
+    document.getElementById('telefone').oninput = (e) => {
         let v = e.target.value.replace(/\D/g,'');
-        if(v.length>11) v=v.slice(0,11);
-        if(v.length>10) e.target.value=`(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
-        else if(v.length>2) e.target.value=`(${v.slice(0,2)}) ${v.slice(2)}`;
-    });
-    ['nomeContato', 'endereco'].forEach(id => {
-        document.getElementById(id).addEventListener('input', function() { this.value = this.value.replace(/(?:^|\s)\S/g, a => a.toUpperCase()); });
-    });
+        if(v.length > 11) v = v.slice(0,11);
+        if(v.length > 10) e.target.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+        else if(v.length > 2) e.target.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    };
 });
 </script>
 </body>
