@@ -279,12 +279,35 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { showMessage("Erro ao baixar: " + e.message); }
     };
 
-    // ALTERAÇÃO: Removida a máscara rígida do telefone para permitir múltiplos números e o símbolo ";"
+    // Máscara inteligente para múltiplos telefones
     document.getElementById('telefone').oninput = (e) => {
-        // Agora aceita qualquer caractere para permitir o ";" e múltiplos números
-        // Mas ainda remove letras se quiser manter limpo (opcional)
-        let v = e.target.value.replace(/[a-zA-Z]/g,'');
-        e.target.value = v;
+        let cursorPosition = e.target.selectionStart;
+        let value = e.target.value;
+
+        // Divide o texto pelos separadores ";"
+        let partes = value.split(';');
+
+        let formatadas = partes.map(parte => {
+            // Remove tudo que não é número de cada parte
+            let nums = parte.replace(/\D/g, '');
+            
+            // Aplica a máscara de acordo com a quantidade de números
+            if (nums.length > 10) {
+                // Formato Celular: (11) 99999-9999
+                return nums.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            } else if (nums.length > 6) {
+                // Formato Fixo: (11) 3333-4444
+                return nums.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
+            } else if (nums.length > 2) {
+                return nums.replace(/^(\d{2})(\d+)/, '($1) $2');
+            } else if (nums.length > 0) {
+                return nums.replace(/^(\d+)/, '($1');
+            }
+            return nums;
+        });
+
+        // Junta as partes novamente com o separador e um espaço para legibilidade
+        e.target.value = formatadas.join('; ');
     };
 });
 </script>
