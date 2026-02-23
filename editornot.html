@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerar Notificação - Dashboard</title>
     <style>
-    /* --- VARIÁVEIS PADRÃO --- */
     :root {
         --primary-color: #0077cc;
         --primary-hover: #005fa3;
@@ -19,44 +18,20 @@
         --drop-zone-bg: #f8f9fa;
         --drop-zone-border: #cbd5e0;
     }
-
-    /* --- TEMAS --- */
     body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; }
     body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; }
     body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
     body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #d1e7dd; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
     body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border: #444; }
-
-    /* Estilos Temas Específicos */
-    body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
-    body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
-
-    /* --- ESTILOS GERAIS --- */
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
     .form-container { background: var(--bg-card); padding: 10px; border-radius: var(--border-radius); width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box; border: 1px solid var(--border-color); }
     .preview-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; }
     #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; }
-
     .button-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; background: var(--bg-card); padding: 8px; border-radius: var(--border-radius); border: 1px solid var(--border-color); flex-shrink: 0; }
-    
-    /* --- LISTA DE IMAGENS (DRAGGABLE) --- */
     #imgListContainer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-    .img-tag { 
-        background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; 
-        font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab;
-        user-select: none; border: 1px solid rgba(0,0,0,0.1);
-    }
-    .img-tag:active { cursor: grabbing; }
-    .img-tag .remove-img { 
-        cursor: pointer; font-weight: bold; background: rgba(0,0,0,0.2); 
-        border-radius: 50%; width: 16px; height: 16px; display: flex; 
-        align-items: center; justify-content: center; font-size: 12px;
-    }
-    .img-tag .remove-img:hover { background: #ff4d4d; }
-    .img-tag.dragging { opacity: 0.5; border: 1px dashed #fff; }
-
+    .img-tag { background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab; user-select: none; border: 1px solid rgba(0,0,0,0.1); }
     fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
     legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
     label { display: block; margin-top: 5px; font-weight: 600; font-size: 0.9rem; }
@@ -69,13 +44,12 @@
     </style>
 </head>
 <body class="theme-default">
-
 <div id="container">
   <div class="form-container">
     <fieldset>
       <legend>Dados da Notificação</legend>
-      <label>Telefone(s):</label>
-      <input type="tel" id="telefone" placeholder="(44) 99999-9999" class="auto-update">
+      <label>Telefone(s) (use ; para separar):</label>
+      <input type="text" id="telefone" placeholder="(44) 9999-9999 ; (44) 8888-8888" class="auto-update">
       <label>Nome(s):</label>
       <input type="text" id="nomeContato" placeholder="Nome completo" class="auto-update">
       <label>Endereço:</label>
@@ -84,7 +58,7 @@
       <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
       
       <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contato realizado via WhatsApp com , onde foi enviada a notificação. Comprovante em anexo."> WhatsApp</label>
+          <label class="checkbox-label"><input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega, foi deixada a notificação."> Incompleto</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário."> Terreno</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
@@ -140,102 +114,54 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     let pdfJsDoc = null;
-    const AppState = { 
-        pdfBuffer: null, 
-        pdfName: "Notificacao.pdf", 
-        images: [], 
-        isProcessing: false 
-    };
+    const AppState = { pdfBuffer: null, pdfName: "Notificacao.pdf", images: [], isProcessing: false };
 
-    // --- TEMAS ---
     const themeSelect = document.getElementById('themeSelect');
-    const applyTheme = (themeName) => {
-        document.body.className = themeName === 'default' ? '' : 'theme-' + themeName;
-    };
-    themeSelect.addEventListener('change', (e) => {
-        applyTheme(e.target.value);
-        localStorage.setItem('selectedTheme', e.target.value);
-    });
+    const applyTheme = (themeName) => { document.body.className = themeName === 'default' ? '' : 'theme-' + themeName; };
+    themeSelect.addEventListener('change', (e) => { applyTheme(e.target.value); localStorage.setItem('selectedTheme', e.target.value); });
     const savedTheme = localStorage.getItem('selectedTheme');
     if (savedTheme) { themeSelect.value = savedTheme; applyTheme(savedTheme); }
 
-    // --- CONFIGURAÇÃO ---
     const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 }, maxRectHeight: 160 };
 
     function showMessage(msg, isError = true) {
         const box = document.getElementById("messageBox");
-        box.textContent = msg;
-        box.style.display = "block";
+        box.textContent = msg; box.style.display = "block";
         box.style.background = isError ? "#fdd" : "#dfd";
         setTimeout(() => box.style.display = "none", 3000);
     }
 
     const debounce = (func, wait) => {
         let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
+        return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
     };
 
-    function setStatus(msg) {
-        document.getElementById('statusIndicator').textContent = msg;
-    }
+    function setStatus(msg) { document.getElementById('statusIndicator').textContent = msg; }
 
-    // --- GESTÃO DE IMAGENS (EXCLUIR E REORDENAR) ---
     function renderImageList() {
         const container = document.getElementById('imgListContainer');
         container.innerHTML = '';
-        
         AppState.images.forEach((img, index) => {
             const tag = document.createElement('div');
-            tag.className = 'img-tag';
-            tag.draggable = true;
-            tag.dataset.index = index;
+            tag.className = 'img-tag'; tag.draggable = true; tag.dataset.index = index;
             tag.innerHTML = `${img.name} <span class="remove-img" title="Remover">×</span>`;
-            
-            // Botão remover
-            tag.querySelector('.remove-img').onclick = (e) => {
-                e.stopPropagation();
-                AppState.images.splice(index, 1);
-                renderImageList();
-                triggerPreviewUpdate();
-            };
-
-            // Drag and Drop (Reordenação)
+            tag.querySelector('.remove-img').onclick = (e) => { e.stopPropagation(); AppState.images.splice(index, 1); renderImageList(); triggerPreviewUpdate(); };
             tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
-            tag.addEventListener('dragend', () => {
-                tag.classList.remove('dragging');
-                reorderImages();
-            });
-
+            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderImages(); });
             container.appendChild(tag);
-        });
-
-        container.addEventListener('dragover', e => {
-            e.preventDefault();
-            const draggingItem = document.querySelector('.dragging');
-            const siblings = [...container.querySelectorAll('.img-tag:not(.dragging)')];
-            let nextSibling = siblings.find(sibling => e.clientX <= sibling.offsetLeft + sibling.offsetWidth / 2);
-            container.insertBefore(draggingItem, nextSibling);
         });
     }
 
     function reorderImages() {
         const newOrder = [...document.querySelectorAll('.img-tag')].map(tag => AppState.images[tag.dataset.index]);
-        AppState.images = newOrder;
-        renderImageList();
-        triggerPreviewUpdate();
+        AppState.images = newOrder; renderImageList(); triggerPreviewUpdate();
     }
 
     function handleImageFiles(files) {
         const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-        AppState.images.push(...newFiles);
-        renderImageList();
-        triggerPreviewUpdate();
+        AppState.images.push(...newFiles); renderImageList(); triggerPreviewUpdate();
     }
 
-    // --- PDF LOGIC ---
     async function loadPdfFile(file) {
         if (!file || file.type !== 'application/pdf') return;
         AppState.pdfBuffer = await file.arrayBuffer();
@@ -266,21 +192,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const page1 = pdfDoc.getPages()[0];
         const { width, height } = page1.getSize();
 
-        // Posição do quadro
         const pos = await findTextPosition(pdfJsDoc, "Gerência de Valores em Carteira");
         let boxPage = page1;
         let boxY = pos ? pos.y - 12 - CONFIG.maxRectHeight : height - 50 - CONFIG.maxRectHeight;
-        
         if (!pos) { boxPage = pdfDoc.addPage([width, height]); boxY = height - 50 - CONFIG.maxRectHeight; }
 
-        // Desenhar quadro
         boxPage.drawRectangle({
             x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: CONFIG.maxRectHeight,
             borderWidth: 1, borderColor: PDFLib.rgb(0,0,0), color: PDFLib.rgb(1,1,1)
         });
 
         const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 11, font: fontBold });
+        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 12, font: fontBold });
 
         const fields = [
             { l: "Telefone(s):", v: document.getElementById('telefone').value },
@@ -296,24 +219,15 @@ document.addEventListener("DOMContentLoaded", () => {
             cursorY -= 15;
         });
 
-        // Imagens
-        let imgPage = boxPage;
-        let imgY = boxY - 20;
-
+        let imgPage = boxPage; let imgY = boxY - 20;
         for (const file of AppState.images) {
             const imgBytes = await file.arrayBuffer();
             const img = file.type === "image/png" ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
             const dims = img.scaleToFit(width - 80, 350);
-
-            if (imgY - dims.height < CONFIG.margins.bottom) {
-                imgPage = pdfDoc.addPage([width, height]);
-                imgY = height - CONFIG.margins.top;
-            }
-
+            if (imgY - dims.height < CONFIG.margins.bottom) { imgPage = pdfDoc.addPage([width, height]); imgY = height - CONFIG.margins.top; }
             imgPage.drawImage(img, { x: width/2 - dims.width/2, y: imgY - dims.height, width: dims.width, height: dims.height });
             imgY -= dims.height + 20;
         }
-
         return await pdfDoc.save();
     }
 
@@ -326,71 +240,51 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("");
     }, 800);
 
-    // Eventos
+    // Eventos de entrada
     document.querySelectorAll('.auto-update').forEach(i => i.addEventListener('input', triggerPreviewUpdate));
     document.getElementById("fileInput").onchange = (e) => loadPdfFile(e.target.files[0]);
     document.getElementById("imgInput").onchange = (e) => handleImageFiles(e.target.files);
     document.getElementById("clearBtn").onclick = () => location.reload();
     document.getElementById("previewBtn").onclick = triggerPreviewUpdate;
     
+    // Lógica para Frases Prontas (Incluso a dinâmica do WhatsApp)
     document.querySelectorAll('.presetPhrase').forEach(cb => {
         cb.onchange = () => {
-            const txt = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => c.dataset.text).join('\n');
-            document.getElementById('ocorrencia').value = txt;
+            const nome = document.getElementById('nomeContato').value || "_____";
+            const phrases = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => {
+                if(c.dataset.isWhatsapp) {
+                    return `Contato realizado via WhatsApp com Sr(a). ${nome}, onde foi enviada a notificação. Comprovante em anexo.`;
+                }
+                return c.dataset.text;
+            });
+            document.getElementById('ocorrencia').value = phrases.join('\n');
             triggerPreviewUpdate();
         };
     });
 
-    // --- FUNÇÃO DOWNLOAD COM "SALVAR COMO" ---
+    // Download
     document.getElementById("downloadBtn").onclick = async () => {
         try {
             const bytes = await gerarPdfBytes();
             if (!bytes) { showMessage("Nenhum PDF gerado."); return; }
-            
             const blob = new Blob([bytes], { type: "application/pdf" });
             const suggestedName = AppState.pdfName || "Notificacao.pdf";
-
-            // Tenta usar a API moderna 'showSaveFilePicker' (Chrome, Edge, Opera)
             if ('showSaveFilePicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: suggestedName,
-                        types: [{
-                            description: 'Documento PDF',
-                            accept: { 'application/pdf': ['.pdf'] },
-                        }],
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    return; // Sucesso, para por aqui
-                } catch (err) {
-                    // Se o usuário clicar em "Cancelar", apenas ignora
-                    if (err.name === 'AbortError') return;
-                    // Se der erro real, cai para o fallback abaixo
-                    console.warn("API de Salvar falhou, tentando método tradicional...", err);
-                }
+                    const handle = await window.showSaveFilePicker({ suggestedName, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+                    const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
+                } catch (err) { if (err.name === 'AbortError') return; }
             }
-
-            // Fallback: Método tradicional (download direto) para Firefox/Outros
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = suggestedName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-        } catch (e) {
-            showMessage("Erro ao baixar: " + e.message);
-        }
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = suggestedName; link.click();
+        } catch (e) { showMessage("Erro ao baixar: " + e.message); }
     };
 
-    // Mascaras simples
+    // ALTERAÇÃO: Removida a máscara rígida do telefone para permitir múltiplos números e o símbolo ";"
     document.getElementById('telefone').oninput = (e) => {
-        let v = e.target.value.replace(/\D/g,'');
-        if(v.length > 11) v = v.slice(0,11);
-        if(v.length > 10) e.target.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
-        else if(v.length > 2) e.target.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+        // Agora aceita qualquer caractere para permitir o ";" e múltiplos números
+        // Mas ainda remove letras se quiser manter limpo (opcional)
+        let v = e.target.value.replace(/[a-zA-Z]/g,'');
+        e.target.value = v;
     };
 });
 </script>
