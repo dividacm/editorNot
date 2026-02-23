@@ -23,7 +23,10 @@
     body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
     body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #d1e7dd; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
-    body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border: #444; }
+    body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border:#444; }
+/* Estilos Temas Específicos */
+    body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
+    body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
     .form-container { background: var(--bg-card); padding: 10px; border-radius: var(--border-radius); width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box; border: 1px solid var(--border-color); }
@@ -203,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 12, font: fontBold });
+        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 11, font: fontBold });
 
         const fields = [
             { l: "Telefone(s):", v: document.getElementById('telefone').value },
@@ -313,3 +316,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
