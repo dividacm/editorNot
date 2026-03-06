@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor PDF - PRO</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        :root {
+            --bg-sidebar: #1e1e1e; --bg-viewer: #333; --bg-body: #2c2c2c;
+            --bg-input: #333; --text-color: white; --border-color: #444;
+            --accent-color: #007bff; --group-bg: #2d2d2d;
+            --drop-highlight: #28a745; --danger-color: #dc3545;
+        }
+        body.light-theme {
+            --bg-sidebar: #f4f4f4; --bg-viewer: #e0e0e0; --bg-body: #ffffff;
+            --bg-input: #ffffff; --text-color: #333; --border-color: #ccc;
+            --accent-color: #0056b3; --group-bg: #e9e9e9;
+        }
+        body { font-family: sans-serif; display: flex; height: 100vh; margin: 0; background: var(--bg-body); color: var(--text-color); overflow: hidden; }
+        
+        .sidebar { width: 400px; padding: 20px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; z-index: 10; display: flex; flex-direction: column; gap: 15px; }
+        
+        .viewer { flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding: 40px; overflow: auto; background: var(--bg-viewer); border: 4px dashed transparent; transition: all 0.2s ease; position: relative; }
+        .viewer.drag-over { border-color: var(--drop-highlight); background: rgba(40, 167, 69, 0.1); }
+        .viewer.empty::after { content: "Arraste o PDF aqui ou use a barra lateral"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; opacity: 0.5; color: var(--text-color); }
+
+        canvas { background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); margin-bottom: 20px; z-index: 1; transform-origin: top center; transition: transform 0.2s; }
+        
+        .input-group { background: var(--group-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent-color); position: relative; }
+        input, textarea, select, button { width: 100%; margin: 5px 0 10px 0; padding: 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-color); box-sizing: border-box; font-family: sans-serif; }
+        
+        .btn-add { background: #17a2b8; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-download { background: #28a745; font-weight: bold; font-size: 1.1em; color: white; border: none; cursor: pointer; padding: 15px; }
+        .btn-remove { background: var(--danger-color); color: white; border: none; padding: 4px 8px; font-size: 12px; cursor: pointer; border-radius: 4px; width: auto; position: absolute; right: 15px; top: 15px; }
+        
+        .controls-row { display: flex; gap: 10px; align-items: center; }
+        .controls-row label { flex-shrink: 0; }
+        .btn-icon { background: var(--group-bg); border: 1px solid var(--border-color); color: var(--text-color); cursor: pointer; padding: 5px 15px; font-weight: bold; width: auto; }
+        
+        label { font-size: 11px; opacity: 0.7; text-transform: uppercase; display: block; }
+        h2 { margin: 0; color: var(--accent-color); }
+        hr { border: 0; border-top: 1px solid var(--border-color); margin: 5px 0; width: 100%; }
+        
+        #loader { display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--accent-color); color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="dark-theme">
+
+<div class="sidebar">
+    <h2>Editor Folha Ponto</h2>
+    
+    <div class="controls-row">
+        <div style="flex-grow: 1;">
+            <label>Tema</label>
+            <select id="themeSelect" style="margin-bottom:0;">
+                <option value="dark">Modo Escuro</option>
+                <option value="light">Modo Claro</option>
+            </select>
+        </div>
+        <div>
+            <label>Zoom</label>
+            <div class="controls-row">
+                <button class="btn-icon" id="btnZoomOut">-</button>
+                <button class="btn-icon" id="btnZoomIn">+</button>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <label>Ajuste Fino de Posição (X / Y)</label>
+        <div class="controls-row">
+            <input type="number" id="offsetX" value="0" title="Mover para Direita/Esquerda">
+            <input type="number" id="offsetY" value="0" title="Mover para Baixo/Cima">
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        <label>PDF Base</label>
+        <input type="file" id="pdfInput" accept=".pdf" style="margin-bottom:0;">
+    </div>
+    <hr>
+
+    <div id="inputsContainer"></div>
+
+    <button class="btn-add" id="btnAddField">+ Adicionar Justificativa</button>
+    <button class="btn-download" id="btnDownload">Exportar PDF Final</button>
+</div>
+
+<div class="viewer empty" id="canvasContainer">
+    <div id="loader">Processando PDF...</div>
+</div>
+
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    
+    // Variáveis Globais de Controle
+    let pdfDocBase = null;
+    let allAnchors = []; 
+    let SCALE = 1.5; 
+    let MARGEM_ESQUERDA = 50;
+    
+    const viewer = document.getElementById('canvasContainer');
+    const inputsContainer = document.getElementById('inputsContainer');
+    const loader = document.getElementById('loader');
+
+    // Inicialização
+    if(localStorage.getItem('theme') === 'light') { document.body.classList.add('light-theme'); document.getElementById('themeSelect').value = 'light'; }
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+        document.body.classList.toggle('light-theme', e.target.value === 'light');
+        localStorage.setItem('theme', e.target.value);
+    });
+
+    // Função para criar campos de input
+    function addInputGroup() {
+        const div = document.createElement('div');
+        div.className = 'input-group';
+        div.innerHTML = `
+            <button class="btn-remove" title="Remover" onclick="this.parentElement.remove(); renderAllPages();">X</button>
+            <label>Data / Período</label>
+            <input type="text" class="data-in" placeholder="Ex: 01/03">
+            
+            <label>Template</label>
+            <select class="template-select">
+                <option value="">-- Personalizado --</option>
+                <option value="Esquecimento de batida">Esquecimento de batida</option>
+                <option value="Consulta médica (Atestado anexo)">Consulta médica (Atestado anexo)</option>
+                <option value="Serviço externo (Prefeitura)">Serviço externo (Prefeitura)</option>
+                <option value="Feriado Municipal (Campo Mourão)">Feriado Municipal (Campo Mourão)</option>
+            </select>
+
+            <label>Justificativa</label>
+            <textarea class="just-in" rows="2" placeholder="Sua justificativa..."></textarea>
+        `;
+        
+        div.querySelector('.template-select').addEventListener('change', (e) => {
+            if(e.target.value) div.querySelector('.just-in').value = e.target.value;
+            renderAllPages();
+        });
+
+        div.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', renderAllPages));
+        inputsContainer.appendChild(div);
+    }
+
+    // Criar um input inicial
+    addInputGroup();
+    document.getElementById('btnAddField').addEventListener('click', () => { addInputGroup(); renderAllPages(); });
+
+    // Controles de Offset e Zoom
+    document.getElementById('offsetX').addEventListener('input', renderAllPages);
+    document.getElementById('offsetY').addEventListener('input', renderAllPages);
+    
+    function applyZoom() {
+        document.querySelectorAll('canvas').forEach(c => {
+            c.style.transform = `scale(${SCALE / 1.5})`; // Mantém render base, apenas escala CSS
+            c.style.marginBottom = `${(c.height * (SCALE/1.5) - c.height) + 20}px`;
+        });
+    }
+    document.getElementById('btnZoomIn').addEventListener('click', () => { SCALE += 0.2; applyZoom(); });
+    document.getElementById('btnZoomOut').addEventListener('click', () => { if(SCALE > 0.5) SCALE -= 0.2; applyZoom(); });
+
+    // Lógica de Carregamento
+    async function handleFile(file) {
+        if (!file || file.type !== "application/pdf") return alert("Arquivo inválido.");
+        loader.style.display = "block";
+        viewer.classList.remove('empty');
+        
+        // Timeout para permitir que o DOM atualize e mostre o loader
+        setTimeout(async () => {
+            allAnchors = []; 
+            viewer.querySelectorAll('canvas').forEach(c => c.remove());
+            window.currentPdfBuffer = await file.arrayBuffer();
+            pdfDocBase = await pdfjsLib.getDocument({data: window.currentPdfBuffer.slice(0)}).promise;
+            
+            for (let i = 1; i <= pdfDocBase.numPages; i++) {
+                const page = await pdfDocBase.getPage(i);
+                const textContent = await page.getTextContent();
+                textContent.items.forEach(item => {
+                    if (item.str.includes("Assinatura do Responsavel")) {
+                        const viewport = page.getViewport({scale: 1.5}); // Render base fixo
+                        allAnchors.push({ pageNumber: i, y: viewport.height - (item.transform[5] * 1.5) });
+                    }
+                });
+                const canvas = document.createElement('canvas'); 
+                canvas.id = `canvas-p${i}`;
+                viewer.appendChild(canvas);
+            }
+            await renderAllPages();
+            applyZoom();
+            loader.style.display = "none";
+        }, 50);
+    }
+
+    viewer.addEventListener('dragover', (e) => { e.preventDefault(); viewer.classList.add('drag-over'); });
+    viewer.addEventListener('dragleave', () => viewer.classList.remove('drag-over'));
+    viewer.addEventListener('drop', (e) => { e.preventDefault(); viewer.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
+    document.getElementById('pdfInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    // Renderização no Canvas
+    async function renderAllPages() {
+        if (!pdfDocBase) return;
+        const datas = Array.from(document.querySelectorAll('.data-in')).map(i => i.value);
+        const justs = Array.from(document.querySelectorAll('.just-in')).map(i => i.value);
+        const offX = Number(document.getElementById('offsetX').value) * 1.5;
+        const offY = Number(document.getElementById('offsetY').value) * 1.5;
+
+        for (let i = 1; i <= pdfDocBase.numPages; i++) {
+            const page = await pdfDocBase.getPage(i);
+            const viewport = page.getViewport({scale: 1.5});
+            const canvas = document.getElementById(`canvas-p${i}`);
+            if (!canvas) continue;
+            const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height; canvas.width = viewport.width;
+            await page.render({canvasContext: ctx, viewport: viewport}).promise;
+
+            allAnchors.filter(a => a.pageNumber === i).forEach(anchor => {
+                let currentY = anchor.y + 50 + offY;
+                let startX = (MARGEM_ESQUERDA * 1.5) + offX;
+
+                ctx.font = "bold 16px Arial"; ctx.fillStyle = "black";
+                ctx.fillText("Justificativas:", startX, currentY);
+                currentY += 25;
+
+                datas.forEach((dt, idx) => {
+                    if(!dt && !justs[idx]) return; // Pula vazios
+                    const textoCompleto = `Data: ${dt} - ${justs[idx] || ""}`;
+                    ctx.font = "12px Arial"; ctx.fillStyle = "black";
+                    const lines = wrapText(ctx, textoCompleto, startX, currentY, 450, 15);
+                    currentY += (lines * 15) + 10;
+                });
+            });
+        }
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        if(!text) return 0;
+        const words = text.split(' ');
+        let line = '', count = 0;
+        for(let n = 0; n < words.length; n++) {
+            let testLine = line + words[n] + ' ';
+            if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+                ctx.fillText(line, x, y); line = words[n] + ' '; y += lineHeight; count++;
+            } else { line = testLine; }
+        }
+        ctx.fillText(line, x, y); return count + 1;
+    }
+
+    // Exportação Final (PDF-Lib)
+    document.getElementById('btnDownload').addEventListener('click', async () => {
+        if (!window.currentPdfBuffer) return alert("Selecione um PDF primeiro.");
+        
+        loader.style.display = "block";
+        loader.innerText = "Gerando Arquivo Final...";
+
+        setTimeout(async () => {
+            const pdfDoc = await PDFLib.PDFDocument.load(window.currentPdfBuffer);
+            const pages = pdfDoc.getPages();
+            const datas = Array.from(document.querySelectorAll('.data-in')).map(i => i.value);
+            const justs = Array.from(document.querySelectorAll('.just-in')).map(i => i.value);
+            const offX = Number(document.getElementById('offsetX').value);
+            const offY = Number(document.getElementById('offsetY').value); // + down, - up
+
+            allAnchors.forEach(anchor => {
+                const currentPage = pages[anchor.pageNumber - 1];
+                const { height } = currentPage.getSize();
+                // Subtrai offY porque Y=0 é o rodapé no PDF-Lib
+                let currentPdfY = height - (anchor.y / 1.5) - 50 - offY;
+                let startX = MARGEM_ESQUERDA + offX;
+
+                currentPage.drawText("Justificativas:", { x: startX, y: currentPdfY, size: 12 });
+                currentPdfY -= 20;
+
+                datas.forEach((dt, idx) => {
+                    if(!dt && !justs[idx]) return;
+                    const textoFinal = `Data: ${dt} - ${justs[idx] || ""}`;
+                    currentPage.drawText(textoFinal, { x: startX, y: currentPdfY, size: 9, maxWidth: 450, lineHeight: 11 });
+                    const estLines = Math.ceil(textoFinal.length / 90); 
+                    currentPdfY -= (estLines * 11) + 15;
+                });
+            });
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "folha_ponto_processada.pdf";
+            link.click();
+            
+            loader.style.display = "none";
+            loader.innerText = "Processando PDF...";
+        }, 50);
+    });
+</script>
+
+</body>
+</html>
