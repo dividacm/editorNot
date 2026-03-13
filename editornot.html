@@ -6,22 +6,22 @@
     <title>Gerar Notificação - Dashboard</title>
     <style>
     :root {
-        --primary-color: #0077cc;
+        --primary-color: #0058cc;
         --primary-hover: #005fa3;
         --bg-body: #c7c9c9;
         --bg-card: #ffffff;
         --text-main: #1f1d1d;
-        --border-color: #dcdde6;
+        --border-color: #070575;
         --input-bg: #d8e2e3;
         --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         --border-radius: 8px;
         --drop-zone-bg: #f8f9fa;
         --drop-zone-border: #cbd5e0;
     }
-    body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; }
-    body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; }
-    body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; }
-    body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #d1e7dd; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
+    body.theme-gold { --primary-color: #b8860b; --primary-hover: #8b6508; --bg-body:#bd8d15; --border-color: #f57c02; --input-bg: #f8fcf9; --drop-zone-border: #ddff00; }
+    body.theme-pink { --primary-color: #e91e63; --primary-hover: #c2185b; --bg-body:#cf6da0; --border-color: #d10049; --input-bg: #f8fcf9; --drop-zone-border: #9e5a72; }
+    body.theme-purple { --primary-color: #9c27b0; --primary-hover: #7b1fa2; --bg-body:#4f14a3; --border-color: #9f2df7; --input-bg: #f8fcf9; --drop-zone-border: #b65fe8;}
+    body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #15752c; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
     body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border:#444; }
     /* Estilos Temas Específicos */
@@ -61,11 +61,13 @@
       <label>Ocorrência:</label>
       <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
       
-      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
           <label class="checkbox-label"><input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega, foi deixada a notificação."> Incompleto</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário."> Terreno</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
+	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
+    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="TEXTO DA NOVA FRASE 2."> Rótulo 2</label>
       </div>
     </fieldset>
 
