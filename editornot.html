@@ -116,16 +116,14 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    let pdfJsDoc = null;
-    const AppState = { pdfBuffer: null, pdfName: "Notificacao.pdf", images: [], isProcessing: false };
+    const AppState = { pdfs: [], images: [], isProcessing: false };
+    const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 }, maxRectHeight: 160 };
 
     const themeSelect = document.getElementById('themeSelect');
     const applyTheme = (themeName) => { document.body.className = themeName === 'default' ? '' : 'theme-' + themeName; };
     themeSelect.addEventListener('change', (e) => { applyTheme(e.target.value); localStorage.setItem('selectedTheme', e.target.value); });
     const savedTheme = localStorage.getItem('selectedTheme');
     if (savedTheme) { themeSelect.value = savedTheme; applyTheme(savedTheme); }
-
-    const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 }, maxRectHeight: 160 };
 
     function showMessage(msg, isError = true) {
         const box = document.getElementById("messageBox");
@@ -141,14 +139,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setStatus(msg) { document.getElementById('statusIndicator').textContent = msg; }
 
+    // Renderiza e gerencia lista de Imagens
     function renderImageList() {
         const container = document.getElementById('imgListContainer');
         container.innerHTML = '';
         AppState.images.forEach((img, index) => {
             const tag = document.createElement('div');
-            tag.className = 'img-tag'; tag.draggable = true; tag.dataset.index = index;
-            tag.innerHTML = `${img.name} <span class="remove-img" title="Remover">×</span>`;
-            tag.querySelector('.remove-img').onclick = (e) => { e.stopPropagation(); AppState.images.splice(index, 1); renderImageList(); triggerPreviewUpdate(); };
+            tag.className = 'item-tag'; tag.draggable = true; tag.dataset.index = index;
+            tag.innerHTML = `${img.name} <span class="remove-btn" style="cursor:pointer;" title="Remover">×</span>`;
+            tag.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); AppState.images.splice(index, 1); renderImageList(); triggerPreviewUpdate(); };
             tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
             tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderImages(); });
             container.appendChild(tag);
@@ -156,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function reorderImages() {
-        const newOrder = [...document.querySelectorAll('.img-tag')].map(tag => AppState.images[tag.dataset.index]);
+        const newOrder = [...document.querySelectorAll('#imgListContainer .item-tag')].map(tag => AppState.images[tag.dataset.index]);
         AppState.images = newOrder; renderImageList(); triggerPreviewUpdate();
     }
 
@@ -165,13 +164,33 @@ document.addEventListener("DOMContentLoaded", () => {
         AppState.images.push(...newFiles); renderImageList(); triggerPreviewUpdate();
     }
 
-    async function loadPdfFile(file) {
-        if (!file || file.type !== 'application/pdf') return;
-        AppState.pdfBuffer = await file.arrayBuffer();
-        AppState.pdfName = file.name;
-        pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfBuffer }).promise;
-        document.getElementById("fileInfo").style.display = "block";
-        document.getElementById("fileInfo").textContent = `✅ ${file.name}`;
+    // Renderiza e gerencia lista de PDFs
+    function renderPdfList() {
+        const container = document.getElementById('pdfListContainer');
+        container.innerHTML = '';
+        AppState.pdfs.forEach((pdf, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'item-tag'; tag.draggable = true; tag.dataset.index = index;
+            tag.innerHTML = `${pdf.name} <span class="remove-btn" style="cursor:pointer;" title="Remover">×</span>`;
+            tag.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); AppState.pdfs.splice(index, 1); renderPdfList(); triggerPreviewUpdate(); };
+            tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
+            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderPdfs(); });
+            container.appendChild(tag);
+        });
+    }
+
+    function reorderPdfs() {
+        const newOrder = [...document.querySelectorAll('#pdfListContainer .item-tag')].map(tag => AppState.pdfs[tag.dataset.index]);
+        AppState.pdfs = newOrder; renderPdfList(); triggerPreviewUpdate();
+    }
+
+    async function handlePdfFiles(files) {
+        const newFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+        for (let file of newFiles) {
+            const buffer = await file.arrayBuffer();
+            AppState.pdfs.push({ name: file.name, buffer });
+        }
+        renderPdfList();
         triggerPreviewUpdate();
     }
 
@@ -186,19 +205,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function gerarPdfBytes() {
-        if (!AppState.pdfBuffer) return null;
-        const pdfDoc = await PDFLib.PDFDocument.load(AppState.pdfBuffer);
-        while (pdfDoc.getPageCount() > 1) pdfDoc.removePage(1);
+        if (AppState.pdfs.length === 0) return null;
 
-        const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-        const fontReg = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-        const page1 = pdfDoc.getPages()[0];
+        const mergedPdf = await PDFLib.PDFDocument.create();
+
+        // Extrai a primeira página de todos os PDFs carregados (mantendo a lógica original)
+        for (let i = 0; i < AppState.pdfs.length; i++) {
+            const srcDoc = await PDFLib.PDFDocument.load(AppState.pdfs[i].buffer);
+            const [copiedPage] = await mergedPdf.copyPages(srcDoc, [0]);
+            mergedPdf.addPage(copiedPage);
+        }
+
+        const fontBold = await mergedPdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        const fontReg = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
+        const page1 = mergedPdf.getPages()[0];
         const { width, height } = page1.getSize();
 
+        // Usa o primeiro PDF para calcular posição do texto
+        const pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfs[0].buffer }).promise;
         const pos = await findTextPosition(pdfJsDoc, "Gerência de Valores em Carteira");
+
         let boxPage = page1;
         let boxY = pos ? pos.y - 12 - CONFIG.maxRectHeight : height - 50 - CONFIG.maxRectHeight;
-        if (!pos) { boxPage = pdfDoc.addPage([width, height]); boxY = height - 50 - CONFIG.maxRectHeight; }
 
         boxPage.drawRectangle({
             x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: CONFIG.maxRectHeight,
@@ -218,24 +246,27 @@ document.addEventListener("DOMContentLoaded", () => {
         let cursorY = boxY + CONFIG.maxRectHeight - 40;
         fields.forEach(f => {
             boxPage.drawText(f.l, { x: CONFIG.margins.left + 10, y: cursorY, size: 10, font: fontBold });
-            boxPage.drawText(f.v, { x: CONFIG.margins.left + 100, y: cursorY, size: 10, font: fontReg, maxWidth: width - 260, lineHeight: 12 });
+            boxPage.drawText(f.v, { x: CONFIG.margins.left + 100, y: cursorY, size: 10, font: fontReg, maxWidth: width - 250, lineHeight: 12 });
             cursorY -= 15;
         });
 
         let imgPage = boxPage; let imgY = boxY - 20;
         for (const file of AppState.images) {
             const imgBytes = await file.arrayBuffer();
-            const img = file.type === "image/png" ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+            const img = file.type === "image/png" ? await mergedPdf.embedPng(imgBytes) : await mergedPdf.embedJpg(imgBytes);
             const dims = img.scaleToFit(width - 80, 350);
-            if (imgY - dims.height < CONFIG.margins.bottom) { imgPage = pdfDoc.addPage([width, height]); imgY = height - CONFIG.margins.top; }
+            if (imgY - dims.height < CONFIG.margins.bottom) { imgPage = mergedPdf.addPage([width, height]); imgY = height - CONFIG.margins.top; }
             imgPage.drawImage(img, { x: width/2 - dims.width/2, y: imgY - dims.height, width: dims.width, height: dims.height });
             imgY -= dims.height + 20;
         }
-        return await pdfDoc.save();
+        return await mergedPdf.save();
     }
 
     const triggerPreviewUpdate = debounce(async () => {
-        if (!AppState.pdfBuffer) return;
+        if (AppState.pdfs.length === 0) {
+            document.getElementById("previewFrame").src = "";
+            return;
+        }
         setStatus("⏳...");
         const bytes = await gerarPdfBytes();
         const blob = new Blob([bytes], { type: "application/pdf" });
@@ -245,19 +276,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Eventos de entrada
     document.querySelectorAll('.auto-update').forEach(i => i.addEventListener('input', triggerPreviewUpdate));
-    document.getElementById("fileInput").onchange = (e) => loadPdfFile(e.target.files[0]);
+    document.getElementById("fileInput").onchange = (e) => handlePdfFiles(e.target.files);
     document.getElementById("imgInput").onchange = (e) => handleImageFiles(e.target.files);
     document.getElementById("clearBtn").onclick = () => location.reload();
     document.getElementById("previewBtn").onclick = triggerPreviewUpdate;
     
-    // Lógica para Frases Prontas (Incluso a dinâmica do WhatsApp)
+    // Frases Prontas
     document.querySelectorAll('.presetPhrase').forEach(cb => {
         cb.onchange = () => {
             const nome = document.getElementById('nomeContato').value || "_____";
             const phrases = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => {
-                if(c.dataset.isWhatsapp) {
-                    return `Contato realizado via WhatsApp com Sr(a). ${nome}, onde foi enviada a notificação. Comprovante em anexo.`;
-                }
+                if(c.dataset.isWhatsapp) return `Contato realizado via WhatsApp com Sr(a). ${nome}, onde foi enviada a notificação. Comprovante em anexo.`;
                 return c.dataset.text;
             });
             document.getElementById('ocorrencia').value = phrases.join('\n');
@@ -271,7 +300,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const bytes = await gerarPdfBytes();
             if (!bytes) { showMessage("Nenhum PDF gerado."); return; }
             const blob = new Blob([bytes], { type: "application/pdf" });
-            const suggestedName = AppState.pdfName || "Notificacao.pdf";
+            const suggestedName = AppState.pdfs.length > 0 ? AppState.pdfs[0].name : "Notificacao.pdf";
+            
             if ('showSaveFilePicker' in window) {
                 try {
                     const handle = await window.showSaveFilePicker({ suggestedName, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
@@ -282,37 +312,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { showMessage("Erro ao baixar: " + e.message); }
     };
 
-    // Máscara inteligente para múltiplos telefones
+    // Máscara Telefones
     document.getElementById('telefone').oninput = (e) => {
-        let cursorPosition = e.target.selectionStart;
         let value = e.target.value;
-
-        // Divide o texto pelos separadores ";"
         let partes = value.split(';');
-
         let formatadas = partes.map(parte => {
-            // Remove tudo que não é número de cada parte
             let nums = parte.replace(/\D/g, '');
-            
-            // Aplica a máscara de acordo com a quantidade de números
-            if (nums.length > 10) {
-                // Formato Celular: (11) 99999-9999
-                return nums.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
-            } else if (nums.length > 6) {
-                // Formato Fixo: (11) 3333-4444
-                return nums.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
-            } else if (nums.length > 2) {
-                return nums.replace(/^(\d{2})(\d+)/, '($1) $2');
-            } else if (nums.length > 0) {
-                return nums.replace(/^(\d+)/, '($1');
-            }
+            if (nums.length > 10) return nums.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+            else if (nums.length > 6) return nums.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
+            else if (nums.length > 2) return nums.replace(/^(\d{2})(\d+)/, '($1) $2');
+            else if (nums.length > 0) return nums.replace(/^(\d+)/, '($1');
             return nums;
         });
-
-        // Junta as partes novamente com o separador e um espaço para legibilidade
         e.target.value = formatadas.join('; ');
     };
 });
+
 </script>
 </body>
 </html>
