@@ -24,7 +24,7 @@
     body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #d1e7dd; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
     body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border:#444; }
-/* Estilos Temas Específicos */
+    /* Estilos Temas Específicos */
     body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
     body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
@@ -33,8 +33,9 @@
     .preview-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; }
     #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; }
     .button-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; background: var(--bg-card); padding: 8px; border-radius: var(--border-radius); border: 1px solid var(--border-color); flex-shrink: 0; }
-    #imgListContainer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-    .img-tag { background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab; user-select: none; border: 1px solid rgba(0,0,0,0.1); }
+    #imgListContainer, #pdfListContainer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .item-tag { background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab; user-select: none; border: 1px solid rgba(0,0,0,0.1); }
+    .item-tag.dragging { opacity: 0.5; }
     fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
     legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
     label { display: block; margin-top: 5px; font-weight: 600; font-size: 0.9rem; }
@@ -69,12 +70,12 @@
     </fieldset>
 
     <fieldset>
-      <legend>Arquivo PDF Original</legend>
+      <legend>Arquivos PDF (Arraste para ordenar)</legend>
       <div class="drop-zone" id="pdfDropZone">
-          <input type="file" id="fileInput" accept="application/pdf">
-          <p><strong>PDF</strong><br>Clique ou Arraste</p>
+          <input type="file" id="fileInput" accept="application/pdf" multiple>
+          <p><strong>PDFs</strong><br>Clique ou Arraste múltiplos arquivos</p>
       </div>
-      <div id="fileInfo" style="margin-top: 8px; font-size: 0.85rem; color: #2e7d32; font-weight: bold; display: none;"></div>
+      <div id="pdfListContainer"></div>
     </fieldset>
 
     <fieldset>
@@ -327,8 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
         e.target.value = formatadas.join('; ');
     };
 });
-
 </script>
 </body>
 </html>
-
