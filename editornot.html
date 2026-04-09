@@ -56,18 +56,16 @@
       <input type="text" id="telefone" placeholder="(44) 9999-9999 ; (44) 8888-8888" class="auto-update">
       <label>Nome(s):</label>
       <input type="text" id="nomeContato" placeholder="Nome completo" class="auto-update">
-      <label>Endereço:</label>
-      <input type="text" id="endereco" placeholder="Endereço completo" class="auto-update">
       <label>Ocorrência:</label>
       <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
       
       <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
           <label class="checkbox-label"><input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Após três tentativas de entrega, foi deixada a notificação."> Incompleto</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio, não foi possível localizar herdeiro(a) ou atual proprietário."> Terreno</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Notificação deixada  após três tentativas de entrega frustradas ()."> Incompleto</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio. Proprietário atual ou herdeiros não localizados."> Terreno</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
 	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
-    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="TEXTO DA NOVA FRASE 2."> Rótulo 2</label>
+    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="TEXTO DA NOVA FRASE 2."> </label>
       </div>
     </fieldset>
 
@@ -242,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const fields = [
             { l: "Telefone(s):", v: document.getElementById('telefone').value },
             { l: "Nome(s):", v: document.getElementById('nomeContato').value },
-            { l: "Endereço:", v: document.getElementById('endereco').value },
             { l: "Ocorrência:", v: document.getElementById('ocorrencia').value }
         ];
 
@@ -289,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cb.onchange = () => {
             const nome = document.getElementById('nomeContato').value || "_____";
             const phrases = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => {
-                if(c.dataset.isWhatsapp) return `Contato realizado via WhatsApp com Sr(a). ${nome}, onde foi enviada a notificação. Comprovante em anexo.`;
+                if(c.dataset.isWhatsapp) return `Notificação enviada cia WhatsApp ao Sr(a). ${nome}. Comprovante em anexo.`;
                 return c.dataset.text;
             });
             document.getElementById('ocorrencia').value = phrases.join('\n');
