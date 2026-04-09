@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cb.onchange = () => {
             const nome = document.getElementById('nomeContato').value || "_____";
             const phrases = Array.from(document.querySelectorAll('.presetPhrase:checked')).map(c => {
-                if(c.dataset.isWhatsapp) return `Notificação enviada cia WhatsApp ao Sr(a). ${nome}. Comprovante em anexo.`;
+                if(c.dataset.isWhatsapp) return `Notificação enviada via WhatsApp ao Sr(a). ${nome}. Comprovante em anexo.`;
                 return c.dataset.text;
             });
             document.getElementById('ocorrencia').value = phrases.join('\n');
