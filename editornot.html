@@ -301,11 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let cursorY = boxY + dynamicHeight - 40;
         for (let pf of processedFields) {
-            boxPage.drawText(pf.label, { x: CONFIG.margins.left + 10, y: cursorY, size: 13, font: fontBold });
+            boxPage.drawText(pf.label, { x: CONFIG.margins.left + 10, y: cursorY, size: 12, font: fontBold });
             
             let lineCursorY = cursorY;
             for (let line of pf.lines) {
-                boxPage.drawText(line, { x: CONFIG.margins.left + 100, y: lineCursorY, size: 12, font: fontReg });
+                boxPage.drawText(line, { x: CONFIG.margins.left + 100, y: lineCursorY, size: 10, font: fontReg });
                 lineCursorY -= lineHeight;
             }
             cursorY -= (Math.max(1, pf.lines.length) * lineHeight);
