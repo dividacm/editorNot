@@ -24,9 +24,11 @@
     body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #15752c; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
     body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border:#444; }
+    
     /* Estilos Temas Específicos */
     body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
-    body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/1024px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
+    body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/500px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
+    
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
     .form-container { background: var(--bg-card); padding: 10px; border-radius: var(--border-radius); width: 480px; min-width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; height: 100%; box-sizing: border-box; border: 1px solid var(--border-color); }
@@ -59,14 +61,18 @@
       <label>Ocorrência:</label>
       <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
       
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+          <label style="margin: 0; white-space: nowrap;">Ajuste Extra do Quadro (px):</label>
+          <input type="number" id="manualHeight" value="40" step="5" class="auto-update" style="width: 80px; margin: 0;">
+      </div>
+
       <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
           <label class="checkbox-label"><input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Notificação deixada na caixa de correio do imóvel após três tentativas de entrega frustradas ()."> Incompleto</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio. Proprietário atual ou herdeiros não localizados."> Terreno</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
-	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
-    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário
-atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem possibilidade de entrega</label>
+	      <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
+    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem entrega</label>
       </div>
     </fieldset>
 
@@ -119,7 +125,7 @@ atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem pos
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const AppState = { pdfs: [], images: [], isProcessing: false };
-    const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 }, maxRectHeight: 160 };
+    const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 } };
 
     const themeSelect = document.getElementById('themeSelect');
     const applyTheme = (themeName) => { document.body.className = themeName === 'default' ? '' : 'theme-' + themeName; };
@@ -206,12 +212,32 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
+    // Função auxiliar para quebrar texto em linhas com base no MaxWidth
+    function splitTextToLines(text, font, fontSize, maxWidth) {
+        if (!text) return [""];
+        const words = text.split(/\s+/);
+        const lines = [];
+        let currentLine = words[0] || "";
+
+        for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            const width = font.widthOfTextAtSize(currentLine + " " + word, fontSize);
+            if (width < maxWidth) {
+                currentLine += " " + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+    }
+
     async function gerarPdfBytes() {
         if (AppState.pdfs.length === 0) return null;
 
         const mergedPdf = await PDFLib.PDFDocument.create();
 
-        // Extrai a primeira página de todos os PDFs carregados (mantendo a lógica original)
         for (let i = 0; i < AppState.pdfs.length; i++) {
             const srcDoc = await PDFLib.PDFDocument.load(AppState.pdfs[i].buffer);
             const [copiedPage] = await mergedPdf.copyPages(srcDoc, [0]);
@@ -223,33 +249,67 @@ document.addEventListener("DOMContentLoaded", () => {
         const page1 = mergedPdf.getPages()[0];
         const { width, height } = page1.getSize();
 
-        // Usa o primeiro PDF para calcular posição do texto
         const pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfs[0].buffer }).promise;
         const pos = await findTextPosition(pdfJsDoc, "Gerência de Valores em Carteira");
 
+        // Obter valores brutos e filtrar vazios
+        const rawFields = [];
+        const telVal = document.getElementById('telefone').value.trim();
+        const nomeVal = document.getElementById('nomeContato').value.trim();
+        const occVal = document.getElementById('ocorrencia').value.trim();
+
+        if (telVal) rawFields.push({ l: "Telefone(s):", v: telVal });
+        if (nomeVal) rawFields.push({ l: "Nome(s):", v: nomeVal });
+        if (occVal) rawFields.push({ l: "Ocorrência:", v: occVal });
+
+        const maxTextWidth = width -0;
+        const processedFields = [];
+        let requiredLines = 0;
+
+        // Calcular quebra de linhas para definir altura dinamicamente
+        for (let field of rawFields) {
+            const blocks = field.v.split('\n'); // Quebra de linha manual do usuário
+            let fieldLines = [];
+            for (let block of blocks) {
+                fieldLines = fieldLines.concat(splitTextToLines(block, fontReg, 12, maxTextWidth));
+            }
+            processedFields.push({ label: field.l, lines: fieldLines });
+            requiredLines += Math.max(1, fieldLines.length); // Garante mínimo 1 linha
+        }
+
+        // Altura Dinâmica
+        const manualAdjust = parseInt(document.getElementById('manualHeight').value) || 0;
+        const titlePadding = 25;
+        const bottomPadding = 15;
+        const lineHeight = 14;
+        
+        // Se não houver campos, definir altura mínima para o título
+        const dynamicHeight = rawFields.length > 0 
+            ? titlePadding + bottomPadding + (requiredLines * lineHeight) + manualAdjust
+            : titlePadding + bottomPadding + manualAdjust;
+
         let boxPage = page1;
-        let boxY = pos ? pos.y - 12 - CONFIG.maxRectHeight : height - 50 - CONFIG.maxRectHeight;
+        let boxY = pos ? pos.y - 12 - dynamicHeight : height - 50 - dynamicHeight;
 
         boxPage.drawRectangle({
-            x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: CONFIG.maxRectHeight,
+            x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: dynamicHeight,
             borderWidth: 1, borderColor: PDFLib.rgb(0,0,0), color: PDFLib.rgb(1,1,1)
         });
 
         const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + CONFIG.maxRectHeight - 20, size: 11, font: fontBold });
+        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + dynamicHeight - 20, size: 14, font: fontBold });
 
-        const fields = [
-            { l: "Telefone(s):", v: document.getElementById('telefone').value },
-            { l: "Nome(s):", v: document.getElementById('nomeContato').value },
-            { l: "Ocorrência:", v: document.getElementById('ocorrencia').value }
-        ];
-
-        let cursorY = boxY + CONFIG.maxRectHeight - 40;
-        fields.forEach(f => {
-            boxPage.drawText(f.l, { x: CONFIG.margins.left + 10, y: cursorY, size: 10, font: fontBold });
-            boxPage.drawText(f.v, { x: CONFIG.margins.left + 100, y: cursorY, size: 10, font: fontReg, maxWidth: width - 250, lineHeight: 12 });
-            cursorY -= 15;
-        });
+        let cursorY = boxY + dynamicHeight - 40;
+        for (let pf of processedFields) {
+            boxPage.drawText(pf.label, { x: CONFIG.margins.left + 10, y: cursorY, size: 13, font: fontBold });
+            
+            let lineCursorY = cursorY;
+            for (let line of pf.lines) {
+                boxPage.drawText(line, { x: CONFIG.margins.left + 100, y: lineCursorY, size: 12, font: fontReg });
+                lineCursorY -= lineHeight;
+            }
+            cursorY -= (Math.max(1, pf.lines.length) * lineHeight);
+        }
 
         let imgPage = boxPage; let imgY = boxY - 20;
         for (const file of AppState.images) {
@@ -305,7 +365,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if ('showSaveFilePicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({ suggestedName, types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] });
+                    	const handle = await window.showSaveFilePicker({ suggestedName, startIn: 'documents', // Define a pasta inicial
+    			types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] 
+			});
                     const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
                 } catch (err) { if (err.name === 'AbortError') return; }
             }
