@@ -63,7 +63,18 @@
       
       <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
           <label style="margin: 0; white-space: nowrap;">Ajuste Extra do Quadro (px):</label>
-          <input type="number" id="manualHeight" value="40" step="5" class="auto-update" style="width: 80px; margin: 0;">
+          <input type="number" id="manualHeight" value="40" step="5" class="auto-update" style="width: 70px; margin: 0;">
+
+          <label style="margin: 0; white-space: nowrap; margin-left: 10px;">Página do Quadro:</label>
+          <input type="number" id="boxPageNum" value="1" min="1" class="auto-update" style="width: 60px; margin: 0;">
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+          <label style="margin: 0; white-space: nowrap;">Mover Vertical (Y):</label>
+          <input type="number" id="offsetY" value="0" step="10" class="auto-update" style="width: 60px; margin: 0;">
+          
+          <label style="margin: 0; white-space: nowrap; margin-left: 10px;">Mover Horizontal (X):</label>
+          <input type="number" id="offsetX" value="0" step="10" class="auto-update" style="width: 60px; margin: 0;">
       </div>
 
       <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
@@ -71,8 +82,8 @@
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Notificação deixada na caixa de correio do imóvel após três tentativas de entrega frustradas ()."> Incompleto</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio. Proprietário atual ou herdeiros não localizados."> Terreno</label>
           <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
-	      <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
-    	  <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem entrega</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
+          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem entrega</label>
       </div>
     </fieldset>
 
@@ -179,7 +190,23 @@ document.addEventListener("DOMContentLoaded", () => {
         AppState.pdfs.forEach((pdf, index) => {
             const tag = document.createElement('div');
             tag.className = 'item-tag'; tag.draggable = true; tag.dataset.index = index;
-            tag.innerHTML = `${pdf.name} <span class="remove-btn" style="cursor:pointer;" title="Remover">×</span>`;
+            
+            tag.innerHTML = `
+                ${pdf.name} 
+                <input type="text" placeholder="Excluir pág (ex: 2, 4)" title="Páginas para excluir separadas por vírgula"
+                       value="${pdf.pagesToRemove || ''}"
+                       style="width: 130px; padding: 2px 5px; margin-left: 5px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #ccc; color: #1f1d1d;"
+                       onclick="event.stopPropagation()">
+                <span class="remove-btn" style="cursor:pointer; margin-left: 5px; font-weight: bold;" title="Remover">×</span>
+            `;
+            
+            const input = tag.querySelector('input');
+            input.addEventListener('input', (e) => {
+                pdf.pagesToRemove = e.target.value;
+                triggerPreviewUpdate();
+            });
+            input.addEventListener('mousedown', (e) => e.stopPropagation());
+
             tag.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); AppState.pdfs.splice(index, 1); renderPdfList(); triggerPreviewUpdate(); };
             tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
             tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderPdfs(); });
@@ -196,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const newFiles = Array.from(files).filter(f => f.type === 'application/pdf');
         for (let file of newFiles) {
             const buffer = await file.arrayBuffer();
-            AppState.pdfs.push({ name: file.name, buffer });
+            AppState.pdfs.push({ name: file.name, buffer, pagesToRemove: "" });
         }
         renderPdfList();
         triggerPreviewUpdate();
@@ -212,7 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
-    // Função auxiliar para quebrar texto em linhas com base no MaxWidth
     function splitTextToLines(text, font, fontSize, maxWidth) {
         if (!text) return [""];
         const words = text.split(/\s+/);
@@ -239,20 +265,44 @@ document.addEventListener("DOMContentLoaded", () => {
         const mergedPdf = await PDFLib.PDFDocument.create();
 
         for (let i = 0; i < AppState.pdfs.length; i++) {
-            const srcDoc = await PDFLib.PDFDocument.load(AppState.pdfs[i].buffer);
-            const [copiedPage] = await mergedPdf.copyPages(srcDoc, [0]);
-            mergedPdf.addPage(copiedPage);
+            const pdfData = AppState.pdfs[i];
+            const srcDoc = await PDFLib.PDFDocument.load(pdfData.buffer);
+            const numPages = srcDoc.getPageCount();
+
+            const pagesToRemove = (pdfData.pagesToRemove || "")
+                .split(',')
+                .map(p => parseInt(p.trim(), 10) - 1)
+                .filter(p => !isNaN(p) && p >= 0 && p < numPages);
+
+            const pagesToCopy = [];
+            for (let p = 0; p < numPages; p++) {
+                if (!pagesToRemove.includes(p)) {
+                    pagesToCopy.push(p);
+                }
+            }
+
+            if (pagesToCopy.length > 0) {
+                const copiedPages = await mergedPdf.copyPages(srcDoc, pagesToCopy);
+                copiedPages.forEach(page => mergedPdf.addPage(page));
+            }
         }
+
+        if (mergedPdf.getPageCount() === 0) return null;
 
         const fontBold = await mergedPdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
         const fontReg = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
-        const page1 = mergedPdf.getPages()[0];
-        const { width, height } = page1.getSize();
+        
+        const totalPages = mergedPdf.getPageCount();
+        let targetPageNum = parseInt(document.getElementById('boxPageNum').value) || 1;
+        if (targetPageNum < 1) targetPageNum = 1;
+        if (targetPageNum > totalPages) targetPageNum = totalPages;
+        
+        let boxPage = mergedPdf.getPages()[targetPageNum - 1];
+        const { width, height } = boxPage.getSize();
 
         const pdfJsDoc = await pdfjsLib.getDocument({ data: AppState.pdfs[0].buffer }).promise;
         const pos = await findTextPosition(pdfJsDoc, "Gerência de Valores em Carteira");
 
-        // Obter valores brutos e filtrar vazios
         const rawFields = [];
         const telVal = document.getElementById('telefone').value.trim();
         const nomeVal = document.getElementById('nomeContato').value.trim();
@@ -262,64 +312,73 @@ document.addEventListener("DOMContentLoaded", () => {
         if (nomeVal) rawFields.push({ l: "Nome(s):", v: nomeVal });
         if (occVal) rawFields.push({ l: "Ocorrência:", v: occVal });
 
-        const maxTextWidth = width -100;
+        const maxTextWidth = width - 100;
         const processedFields = [];
         let requiredLines = 0;
 
-        // Calcular quebra de linhas para definir altura dinamicamente
         for (let field of rawFields) {
-            const blocks = field.v.split('\n'); // Quebra de linha manual do usuário
+            const blocks = field.v.split('\n');
             let fieldLines = [];
             for (let block of blocks) {
                 fieldLines = fieldLines.concat(splitTextToLines(block, fontReg, 12, maxTextWidth));
             }
             processedFields.push({ label: field.l, lines: fieldLines });
-            requiredLines += Math.max(1, fieldLines.length); // Garante mínimo 1 linha
+            requiredLines += Math.max(1, fieldLines.length);
         }
 
-        // Altura Dinâmica
         const manualAdjust = parseInt(document.getElementById('manualHeight').value) || 0;
+        const offsetX = parseInt(document.getElementById('offsetX').value) || 0;
+        const offsetY = parseInt(document.getElementById('offsetY').value) || 0;
+
         const titlePadding = 25;
         const bottomPadding = 15;
         const lineHeight = 14;
         
-        // Se não houver campos, definir altura mínima para o título
         const dynamicHeight = rawFields.length > 0 
             ? titlePadding + bottomPadding + (requiredLines * lineHeight) + manualAdjust
             : titlePadding + bottomPadding + manualAdjust;
 
-        let boxPage = page1;
         let boxY = pos ? pos.y - 12 - dynamicHeight : height - 50 - dynamicHeight;
 
+        let finalY = boxY + offsetY;
+        let finalX = CONFIG.margins.left + offsetX;
+
         boxPage.drawRectangle({
-            x: CONFIG.margins.left, y: boxY, width: width - (CONFIG.margins.left * 2), height: dynamicHeight,
+            x: finalX, y: finalY, width: width - (CONFIG.margins.left * 2), height: dynamicHeight,
             borderWidth: 1, borderColor: PDFLib.rgb(0,0,0), color: PDFLib.rgb(1,1,1)
         });
 
         const title = "ENTREGA DE NOTIFICAÇÕES - PROTESTO";
-        boxPage.drawText(title, { x: width/2 - fontBold.widthOfTextAtSize(title, 11)/2, y: boxY + dynamicHeight - 20, size: 14, font: fontBold });
+        boxPage.drawText(title, { x: (width/2 - fontBold.widthOfTextAtSize(title, 11)/2) + offsetX, y: finalY + dynamicHeight - 20, size: 14, font: fontBold });
 
-        let cursorY = boxY + dynamicHeight - 40;
+        let cursorY = finalY + dynamicHeight - 40;
         for (let pf of processedFields) {
-            boxPage.drawText(pf.label, { x: CONFIG.margins.left + 10, y: cursorY, size: 12, font: fontBold });
+            boxPage.drawText(pf.label, { x: finalX + 10, y: cursorY, size: 12, font: fontBold });
             
             let lineCursorY = cursorY;
             for (let line of pf.lines) {
-                boxPage.drawText(line, { x: CONFIG.margins.left + 100, y: lineCursorY, size: 10, font: fontReg });
+                boxPage.drawText(line, { x: finalX + 100, y: lineCursorY, size: 10, font: fontReg });
                 lineCursorY -= lineHeight;
             }
             cursorY -= (Math.max(1, pf.lines.length) * lineHeight);
         }
 
-        let imgPage = boxPage; let imgY = boxY - 20;
         for (const file of AppState.images) {
             const imgBytes = await file.arrayBuffer();
             const img = file.type === "image/png" ? await mergedPdf.embedPng(imgBytes) : await mergedPdf.embedJpg(imgBytes);
-            const dims = img.scaleToFit(width - 80, 350);
-            if (imgY - dims.height < CONFIG.margins.bottom) { imgPage = mergedPdf.addPage([width, height]); imgY = height - CONFIG.margins.top; }
-            imgPage.drawImage(img, { x: width/2 - dims.width/2, y: imgY - dims.height, width: dims.width, height: dims.height });
-            imgY -= dims.height + 20;
+            
+            const imgPage = mergedPdf.addPage([width, height]);
+            
+            const maxWidth = width - (CONFIG.margins.left + CONFIG.margins.right);
+            const maxHeight = height - (CONFIG.margins.top + CONFIG.margins.bottom);
+            const dims = img.scaleToFit(maxWidth, maxHeight);
+            
+            const x = width / 2 - dims.width / 2;
+            const y = height / 2 - dims.height / 2;
+            
+            imgPage.drawImage(img, { x, y, width: dims.width, height: dims.height });
         }
+        
         return await mergedPdf.save();
     }
 
@@ -330,8 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         setStatus("⏳...");
         const bytes = await gerarPdfBytes();
-        const blob = new Blob([bytes], { type: "application/pdf" });
-        document.getElementById("previewFrame").src = URL.createObjectURL(blob);
+        if(bytes) {
+            const blob = new Blob([bytes], { type: "application/pdf" });
+            document.getElementById("previewFrame").src = URL.createObjectURL(blob);
+        } else {
+            document.getElementById("previewFrame").src = "";
+        }
         setStatus("");
     }, 800);
 
@@ -365,9 +428,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if ('showSaveFilePicker' in window) {
                 try {
-                    	const handle = await window.showSaveFilePicker({ suggestedName, startIn: 'documents', // Define a pasta inicial
-    			types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] 
-			});
+                    const handle = await window.showSaveFilePicker({ suggestedName, startIn: 'documents', 
+                    types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] 
+                });
                     const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
                 } catch (err) { if (err.name === 'AbortError') return; }
             }
