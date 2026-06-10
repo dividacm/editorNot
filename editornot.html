@@ -363,20 +363,39 @@ document.addEventListener("DOMContentLoaded", () => {
             cursorY -= (Math.max(1, pf.lines.length) * lineHeight);
         }
 
-        for (const file of AppState.images) {
-            const imgBytes = await file.arrayBuffer();
-            const img = file.type === "image/png" ? await mergedPdf.embedPng(imgBytes) : await mergedPdf.embedJpg(imgBytes);
-            
+        // Configuração das Margens de 2 cm (1 cm = 28.35 pontos pdf-lib) e espaçamento interno de 1 cm
+        const marginPt = 2 * 28.35; 
+        const gapY = 1 * 28.35;     
+
+        for (let i = 0; i < AppState.images.length; i += 2) {
             const imgPage = mergedPdf.addPage([width, height]);
             
-            const maxWidth = width - (CONFIG.margins.left + CONFIG.margins.right);
-            const maxHeight = height - (CONFIG.margins.top + CONFIG.margins.bottom);
-            const dims = img.scaleToFit(maxWidth, maxHeight);
-            
-            const x = width / 2 - dims.width / 2;
-            const y = height / 2 - dims.height / 2;
-            
-            imgPage.drawImage(img, { x, y, width: dims.width, height: dims.height });
+            const maxWidth = width - (marginPt * 2);
+            const maxHeight = (height - (marginPt * 2) - gapY) / 2;
+
+            for (let j = 0; j < 2; j++) {
+                if (i + j >= AppState.images.length) break;
+
+                const file = AppState.images[i + j];
+                const imgBytes = await file.arrayBuffer();
+                const img = file.type === "image/png" ? await mergedPdf.embedPng(imgBytes) : await mergedPdf.embedJpg(imgBytes);
+                
+                const dims = img.scaleToFit(maxWidth, maxHeight);
+                const x = width / 2 - dims.width / 2;
+                
+                let y;
+                if (j === 0) {
+                    // Imagem Superior: Alinha a partir do topo da área útil descontando a margem superior
+                    const topLimit = height - marginPt;
+                    y = topLimit - (maxHeight / 2) - (dims.height / 2);
+                } else {
+                    // Imagem Inferior: Alinha a partir da base da área útil somando a margem inferior
+                    const bottomLimit = marginPt;
+                    y = bottomLimit + (maxHeight / 2) - (dims.height / 2);
+                }
+                
+                imgPage.drawImage(img, { x, y, width: dims.width, height: dims.height });
+            }
         }
         
         return await mergedPdf.save();
