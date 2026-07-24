@@ -24,103 +24,330 @@
     body.theme-palmeiras { --primary-color: #006437; --primary-hover: #044427; --bg-body: #15752c; --border-color: #badbcc; --input-bg: #f8fcf9; --drop-zone-border: #006437; }
     body.theme-saopaulo { --primary-color: #df2128; --primary-hover: #000000; --bg-body: #a81826; --bg-card: #ffffff; --text-main: #000000; --border-color: #000000; --input-bg: #fff5f5; --drop-zone-border: #df2128; }
     body.theme-dark { --primary-color: #4a9eff; --primary-hover: #0077cc; --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --border-color: #333; --input-bg: #2d2d2d; --drop-zone-bg: #252525; --drop-zone-border:#444; }
-    
-    /* Estilos Temas Específicos */
+
     body.theme-palmeiras .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg'); background-repeat: no-repeat; background-position: right 15px center; background-size: 42px; padding-right: 70px; border: 1px solid #006437; }
     body.theme-saopaulo .button-row { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Brasao_do_Sao_Paulo_Futebol_Clube.svg/500px-Brasao_do_Sao_Paulo_Futebol_Clube.svg.png'); background-repeat: no-repeat; background-position: right 15px center; background-size: 40px; padding-right: 70px; border-top: 3px solid #df2128; border-bottom: 3px solid #000000; }
-    
+
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: var(--font-family); background-color: var(--bg-body); color: var(--text-main); transition: background 0.3s ease; }
     #container { display: flex; height: 100vh; padding: 11px; box-sizing: border-box; gap: 15px; }
-    .form-container { background: var(--bg-card); padding: 10px; 
-    border-radius: var(--border-radius); 
-    min-width: 350px; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
-    display: flex; 
-    flex-direction: column; 
-    overflow-y: auto; 
-    /* CORREÇÃO: Subtrai os 22px de padding do #container (11px superior + 11px inferior) */
-    height: calc(100vh - 22px); 
-    box-sizing: border-box; 
-    border: 1px solid var(--border-color); 
-}
+    
+    /* --- Form Container (Sem Scroll) --- */
+    .form-container {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        border-radius: var(--border-radius);
+        max-width: 650px;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 22px);
+        box-sizing: border-box;
+        overflow: hidden; 
+    }
+
+    /* --- Área Rolável Interna --- */
+    .form-scroll-area {
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-bottom: 12px;
+        padding-right: 4px;
+    }
+    
+    .form-scroll-area::-webkit-scrollbar { width: 6px; }
+    .form-scroll-area::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; opacity: 0.5; }
+
+    /* --- Rodapé Fixo --- */
+    .form-footer {
+        padding-top: 12px;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    /* Cards de Seção */
+    .form-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .section-header {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--drop-zone-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Inputs e Labels */
+    .form-section label { margin: 0; font-size: 0.85rem; color: var(--text-main); font-weight: 600; }
+    .form-section input[type="text"], 
+    .form-section input[type="number"], 
+    .form-section textarea, 
+    .form-section select {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        transition: all 0.2s ease;
+        width: 100%;
+        color: var(--text-main);
+        box-sizing: border-box;
+    }
+    .form-section input:focus, .form-section textarea:focus, .form-section select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 88, 204, 0.15);
+    }
+
+    /* Chips (Substitutos dos Checkboxes) */
+    .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .chip-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .chip-label input[type="checkbox"] { display: none; }
+    .chip-label:has(input:checked) {
+        background: var(--primary-color);
+        color: #fff;
+        border-color: var(--primary-color);
+    }
+
+    /* Grids e Elementos */
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+
+    /* Acordeão de Ajustes */
+    .advanced-settings { background: var(--drop-zone-bg); border: 1px solid var(--drop-zone-border); border-radius: var(--border-radius); padding: 10px; }
+    .advanced-settings summary { font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--primary-color); user-select: none; }
+    .advanced-settings[open] summary { margin-bottom: 12px; }
+
     .preview-container { flex-grow: 1; display: flex; flex-direction: column; height: 100%; min-width: 0; }
     #previewFrame { flex-grow: 1; width: 100%; border: none; border-radius: var(--border-radius); background: #525659; }
     .button-row { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; background: var(--bg-card); padding: 8px; border-radius: var(--border-radius); border: 1px solid var(--border-color); flex-shrink: 0; }
+    
     #imgListContainer, #pdfListContainer { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .item-tag { background: var(--primary-color); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 8px; cursor: grab; user-select: none; border: 1px solid rgba(0,0,0,0.1); }
     .item-tag.dragging { opacity: 0.5; }
-    fieldset { border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 8px; margin-bottom: 8px; }
-    legend { font-weight: bold; padding: 0 3px; color: var(--primary-color); }
-    label { display: block; margin-top: 5px; font-weight: 600; font-size: 0.9rem; }
-    input:not([type="checkbox"]), textarea, select { width: 100%; padding: 5px; margin-top: 3px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); border-radius: 6px; box-sizing: border-box; }
+    
     button { padding: 6px 12px; border: none; background: var(--primary-color); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 500; }
-    .drop-zone { border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius); padding: 10px; text-align: center; background: var(--drop-zone-bg); cursor: pointer; position: relative; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.small { padding: 4px 8px; font-size: 0.8rem; }
+    
+    .drop-zone { border: 2px dashed var(--drop-zone-border); border-radius: var(--border-radius); padding: 16px; text-align: center; background: var(--drop-zone-bg); cursor: pointer; position: relative; transition: background 0.2s ease, border-color 0.2s ease; }
+    .drop-zone:hover { background: var(--input-bg); border-color: var(--primary-color); }
+    .drop-zone p { margin: 0; font-size: 0.85rem; }
     .drop-zone input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    #messageBox { margin-top: 10px; padding: 10px; border-radius: var(--border-radius); display: none; text-align: center; }
+    
+    #messageBox { margin-top: 10px; padding: 10px; border-radius: var(--border-radius); display: none; text-align: center; font-size: 0.9rem; }
     #statusIndicator { font-size: 0.85rem; color: var(--primary-color); margin-left: auto; font-weight: bold; }
+    
+    .history-row { display: flex; gap: 6px; align-items: center; }
+    .history-row select { flex-grow: 1; }
+    .undo-row { display: flex; gap: 6px; }
+    .undo-row button { flex-grow: 1; }
+    
+    .ocr-btn { background: #444; font-size: 0.75rem; padding: 2px 6px; }
+    .ocr-btn:disabled { opacity: 0.6; }
+    #ocrReview pre { white-space: pre-wrap; word-break: break-word; background: var(--input-bg); padding: 6px; border-radius: 6px; max-height: 150px; overflow-y: auto; margin: 4px 0 0; }
+    #ocrReview .ocr-fields { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+    #ocrReview .ocr-fields span { background: var(--primary-color); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+
+    /* --- Botão de Ajuda --- */
+    .icon-btn {
+        background: var(--input-bg);
+        color: var(--primary-color);
+        border: 1px solid var(--border-color);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.2s;
+    }
+    .icon-btn:hover { background: var(--primary-color); color: #fff; }
+
+    /* --- Modal Overlay --- */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+    }
+    .modal-content {
+        background: var(--bg-card);
+        color: var(--text-main);
+        width: 90%;
+        max-width: 500px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        border: 1px solid var(--border-color);
+        animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--input-bg); border-bottom: 1px solid var(--border-color); }
+    .modal-header h2 { margin: 0; font-size: 1.1rem; color: var(--primary-color); }
+    .close-btn { background: transparent; border: none; color: var(--text-main); font-size: 1.5rem; cursor: pointer; padding: 0 4px; }
+    .close-btn:hover { color: #d32f2f; }
+    .modal-body { padding: 16px; font-size: 0.9rem; line-height: 1.5; }
+    .modal-body ol { margin: 0; padding-left: 20px; }
+    .modal-body li { margin-bottom: 8px; }
     </style>
 </head>
 <body class="theme-default">
 <div id="container">
   <div class="form-container">
-    <fieldset>
-      <legend>Dados da Notificação</legend>
-      <label>Telefone(s) (use ; para separar):</label>
-      <input type="text" id="telefone" placeholder="(44) 9999-9999 ; (44) 8888-8888" class="auto-update">
-      <label>Nome(s):</label>
-      <input type="text" id="nomeContato" placeholder="Nome completo" class="auto-update">
-      <label>Ocorrência:</label>
-      <textarea id="ocorrencia" rows="4" placeholder="Parecer..." class="auto-update"></textarea>
-      
-      <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
-          <label style="margin: 0; white-space: nowrap;">Ajuste Extra do Quadro (px):</label>
-          <input type="number" id="manualHeight" value="40" step="5" class="auto-update" style="width: 70px; margin: 0;">
+    
+    <!-- ÁREA COM SCROLL -->
+    <div class="form-scroll-area">
 
-          <label style="margin: 0; white-space: nowrap; margin-left: 10px;">Página do Quadro:</label>
-          <input type="number" id="boxPageNum" value="1" min="1" class="auto-update" style="width: 60px; margin: 0;">
-      </div>
+        <!-- SEÇÃO 1: DADOS PRINCIPAIS -->
+        <div class="form-section">
+            <h3 class="section-header">
+                Dados da Notificação
+                <button id="helpBtn" class="icon-btn" title="Instruções de uso">?</button>
+            </h3>
+            
+            <div class="history-row">
+                <select id="historySelect">
+                    <option value="">— Últimos usados —</option>
+                </select>
+                <button id="applyHistoryBtn" class="small" title="Preencher com o item selecionado">Usar</button>
+                <button id="clearHistoryBtn" class="small" style="background:#d32f2f;" title="Limpar histórico">🗑</button>
+            </div>
 
-      <div style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
-          <label style="margin: 0; white-space: nowrap;">Mover Vertical (Y):</label>
-          <input type="number" id="offsetY" value="0" step="10" class="auto-update" style="width: 60px; margin: 0;">
-          
-          <label style="margin: 0; white-space: nowrap; margin-left: 10px;">Mover Horizontal (X):</label>
-          <input type="number" id="offsetX" value="0" step="10" class="auto-update" style="width: 60px; margin: 0;">
-      </div>
+            <div class="input-group">
+                <label>Telefone(s) (use ; para separar)</label>
+                <input type="text" id="telefone" placeholder="(44) 9999-9999 ; (44) 8888-8888" class="auto-update">
+            </div>
 
-      <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: 1fr 2fr; gap: 4px;">
-          <label class="checkbox-label"><input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Notificação deixada na caixa de correio do imóvel após três tentativas de entrega frustradas ()."> Incompleto</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Terreno baldio. Proprietário atual ou herdeiros não localizados."> Terreno</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.</label>
-          <label class="checkbox-label"><input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário atual ou herdeiros não localizados após tentativa de entrega"> Espolio sem entrega</label>
-      </div>
-    </fieldset>
+            <div class="input-group">
+                <label>Nome(s)</label>
+                <input type="text" id="nomeContato" placeholder="Nome completo" class="auto-update">
+            </div>
 
-    <fieldset>
-      <legend>Arquivos PDF (Arraste para ordenar)</legend>
-      <div class="drop-zone" id="pdfDropZone">
-          <input type="file" id="fileInput" accept="application/pdf" multiple>
-          <p><strong>PDFs</strong><br>Clique ou Arraste múltiplos arquivos</p>
-      </div>
-      <div id="pdfListContainer"></div>
-    </fieldset>
+            <div class="input-group">
+                <label>Ocorrência</label>
+                <textarea id="ocorrencia" rows="3" placeholder="Parecer..." class="auto-update"></textarea>
+            </div>
 
-    <fieldset>
-      <legend>Anexos (Arraste para ordenar)</legend>
-      <div class="drop-zone" id="imgDropZone">
-          <input type="file" id="imgInput" accept="image/*" multiple>
-          <p><strong>Imagens</strong><br>Clique ou Arraste</p>
-      </div>
-      <div id="imgListContainer"></div>
-    </fieldset>
+            <!-- Chips de Respostas Rápidas -->
+            <div class="chip-grid">
+                <label class="chip-label">
+                    <input type="checkbox" id="checkWhatsapp" class="presetPhrase" data-is-whatsapp="true"> WhatsApp
+                </label>
+                <label class="chip-label">
+                    <input type="checkbox" class="presetPhrase" data-text="Cadastro incompleto. Notificação deixada na caixa de correio do imóvel após três tentativas de entrega frustradas ()."> Incompleto
+                </label>
+                <label class="chip-label">
+                    <input type="checkbox" class="presetPhrase" data-text="Terreno baldio. Proprietário atual ou herdeiros não localizados."> Terreno
+                </label>
+                <label class="chip-label">
+                    <input type="checkbox" class="presetPhrase" data-text="Contribuinte recusou receber a notificação. Comprovante em anexo."> Recusa
+                </label>
+                <label class="chip-label">
+                    <input type="checkbox" class="presetPhrase" data-text="Notificação enviada por carta de Aviso de Recebimento (A.R) assinada."> A.R.
+                </label>
+                <label class="chip-label">
+                    <input type="checkbox" class="presetPhrase" data-text="Proprietário falecido. Casa abandonada, proprietário atual ou herdeiros não localizados após tentativa de entrega"> Espólio s/ entrega
+                </label>
+            </div>
+        </div>
 
-    <div id="messageBox"></div>
-    <div style="margin-top: auto;">
-        <button id="clearBtn" style="width: 100%; background: #d32f2f;">Limpar Tudo</button>
+        <!-- SEÇÃO 2: AJUSTES DE POSIÇÃO -->
+        <details class="advanced-settings">
+            <summary>⚙️ Ajustes Manuais do Quadro</summary>
+            <div class="grid-2col">
+                <div class="input-group">
+                    <label>Ajuste Altura (px)</label>
+                    <input type="number" id="manualHeight" value="40" step="5" class="auto-update">
+                </div>
+                <div class="input-group">
+                    <label>Página Alvo</label>
+                    <input type="number" id="boxPageNum" value="1" min="1" class="auto-update">
+                </div>
+                <div class="input-group">
+                    <label>Mover Vertical (Y)</label>
+                    <input type="number" id="offsetY" value="0" step="10" class="auto-update">
+                </div>
+                <div class="input-group">
+                    <label>Mover Horizontal (X)</label>
+                    <input type="number" id="offsetX" value="0" step="10" class="auto-update">
+                </div>
+            </div>
+        </details>
+
+        <!-- SEÇÃO 3: ARQUIVOS E MÍDIA -->
+        <div class="form-section">
+            <div class="section-header">
+                Arquivos
+                <div class="undo-row" style="margin: 0;">
+                    <button id="undoBtn" class="small" title="Desfazer (Ctrl+Z)" disabled>↶</button>
+                    <button id="redoBtn" class="small" title="Refazer (Ctrl+Y)" disabled>↷</button>
+                </div>
+            </div>
+
+            <!-- PDFs -->
+            <div class="drop-zone" id="pdfDropZone">
+                <input type="file" id="fileInput" accept="application/pdf" multiple>
+                <p>📄 <strong>PDFs Base</strong> (Clique ou arraste)</p>
+            </div>
+            <div id="pdfListContainer"></div>
+
+            <!-- Imagens -->
+            <div class="drop-zone" id="imgDropZone">
+                <input type="file" id="imgInput" accept="image/*" multiple>
+                <p>🖼️ <strong>Imagens/Comprovantes</strong> (Clique ou arraste)</p>
+            </div>
+            <div id="imgListContainer"></div>
+
+            <!-- Extração OCR -->
+            <details id="ocrReview" class="advanced-settings" style="display:none; margin-top: 8px;">
+                <summary>🔍 Texto extraído por OCR</summary>
+                <div class="ocr-fields" id="ocrFieldsFound"></div>
+                <pre id="ocrRawText"></pre>
+            </details>
+        </div>
+
+        <div id="messageBox"></div>
+        
+    </div> <!-- /form-scroll-area -->
+
+    <!-- RODAPÉ FIXO -->
+    <div class="form-footer">
+        <button id="clearBtn" style="width: 100%; background: #d32f2f; padding: 12px;">Limpar Todos os Dados</button>
     </div>
-  </div>
+
+  </div> <!-- /form-container -->
 
   <div class="preview-container">
     <div class="button-row">
@@ -141,13 +368,180 @@
   </div>
 </div>
 
+<!-- Modal de Instruções -->
+<div id="helpModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Guia Rápido de Uso</h2>
+            <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ol>
+                <li><strong>Dados Básicos:</strong> Preencha Telefone, Nome e Ocorrência. Use os botões rápidos para autocompletar textos.</li>
+                <li><strong>Histórico:</strong> O sistema salva as últimas 10 entradas. Use o menu suspenso para reaproveitar dados.</li>
+                <li><strong>PDFs Base:</strong> Arraste arquivos. Para excluir páginas de um PDF, digite os números separados por vírgula (ex: 1, 3).</li>
+                <li><strong>Imagens:</strong> Arraste imagens. Clique em 🔍 para extrair Nome e Telefone via OCR automaticamente.</li>
+                <li><strong>Ajuste do Quadro:</strong> Em "Ajustes Manuais", mova o quadro de ocorrência no eixo X/Y ou altere a página alvo.</li>
+                <li><strong>Finalização:</strong> Confirme o preview à direita e clique em <strong>💾 Download</strong>.</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const AppState = { pdfs: [], images: [], isProcessing: false };
     const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 } };
+
+    // ===================== MODAL DE INSTRUÇÕES =====================
+    const modal = document.getElementById("helpModal");
+    const helpBtn = document.getElementById("helpBtn");
+    const closeBtn = document.getElementById("closeModalBtn");
+
+    helpBtn.onclick = () => modal.style.display = "flex";
+    closeBtn.onclick = () => modal.style.display = "none";
+    window.onclick = (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    };
+
+    // ===================== HISTÓRICO DE ÚLTIMOS USADOS =====================
+    const HISTORY_KEY = "notif_history_v1";
+    const HISTORY_MAX = 10;
+
+    function loadHistory() {
+        try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+        catch { return []; }
+    }
+
+    function saveHistory(list) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+    }
+
+    function renderHistorySelect() {
+        const select = document.getElementById("historySelect");
+        const list = loadHistory();
+        select.innerHTML = '<option value="">— Últimos usados —</option>';
+        list.forEach((entry, idx) => {
+            const opt = document.createElement("option");
+            opt.value = idx;
+            const label = entry.nome || entry.telefone || "(sem nome)";
+            opt.textContent = `${label}${entry.telefone ? " · " + entry.telefone : ""}`;
+            select.appendChild(opt);
+        });
+    }
+
+    function pushToHistory() {
+        const telefone = document.getElementById('telefone').value.trim();
+        const nome = document.getElementById('nomeContato').value.trim();
+        const ocorrencia = document.getElementById('ocorrencia').value.trim();
+        if (!telefone && !nome && !ocorrencia) return;
+
+        let list = loadHistory();
+        list = list.filter(e => !(e.nome === nome && e.telefone === telefone));
+        list.unshift({ telefone, nome, ocorrencia, ts: Date.now() });
+        saveHistory(list);
+        renderHistorySelect();
+    }
+
+    function applyHistoryEntry() {
+        const select = document.getElementById("historySelect");
+        if (select.value === "") { showMessage("Selecione um item do histórico.", true); return; }
+        const list = loadHistory();
+        const entry = list[parseInt(select.value, 10)];
+        if (!entry) return;
+        document.getElementById('telefone').value = entry.telefone || "";
+        document.getElementById('nomeContato').value = entry.nome || "";
+        document.getElementById('ocorrencia').value = entry.ocorrencia || "";
+        triggerPreviewUpdate();
+    }
+
+    document.getElementById("applyHistoryBtn").onclick = applyHistoryEntry;
+    document.getElementById("clearHistoryBtn").onclick = () => {
+        if (confirm("Limpar todo o histórico de últimos usados?")) {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistorySelect();
+        }
+    };
+    renderHistorySelect();
+
+    ['telefone', 'nomeContato', 'ocorrencia'].forEach(id => {
+        document.getElementById(id).addEventListener('blur', pushToHistory);
+    });
+
+    // ===================== UNDO / REDO =====================
+    const undoStack = [];
+    const redoStack = [];
+    const UNDO_MAX = 30;
+
+    function updateUndoRedoButtons() {
+        document.getElementById('undoBtn').disabled = undoStack.length === 0;
+        document.getElementById('redoBtn').disabled = redoStack.length === 0;
+    }
+
+    function pushUndo(action) {
+        undoStack.push(action);
+        if (undoStack.length > UNDO_MAX) undoStack.shift();
+        redoStack.length = 0;
+        updateUndoRedoButtons();
+    }
+
+    function undo() {
+        const action = undoStack.pop();
+        if (!action) return;
+        applyInverse(action, redoStack);
+        updateUndoRedoButtons();
+    }
+
+    function redo() {
+        const action = redoStack.pop();
+        if (!action) return;
+        applyInverse(action, undoStack, true);
+        updateUndoRedoButtons();
+    }
+
+    function applyInverse(action, targetStack, isRedo = false) {
+        if (action.type === 'removePdf') {
+            if (!isRedo) {
+                AppState.pdfs.splice(action.index, 0, action.item);
+                targetStack.push({ type: 'removePdf', index: action.index, item: action.item });
+            } else {
+                AppState.pdfs.splice(action.index, 1);
+                targetStack.push({ type: 'removePdf', index: action.index, item: action.item });
+            }
+            renderPdfList();
+        } else if (action.type === 'removeImage') {
+            if (!isRedo) {
+                AppState.images.splice(action.index, 0, action.item);
+                targetStack.push({ type: 'removeImage', index: action.index, item: action.item });
+            } else {
+                AppState.images.splice(action.index, 1);
+                targetStack.push({ type: 'removeImage', index: action.index, item: action.item });
+            }
+            renderImageList();
+        } else if (action.type === 'reorderPdf') {
+            const before = isRedo ? action.after : action.before;
+            AppState.pdfs = before.slice();
+            targetStack.push({ type: 'reorderPdf', before: action.after, after: action.before });
+            renderPdfList();
+        } else if (action.type === 'reorderImage') {
+            const before = isRedo ? action.after : action.before;
+            AppState.images = before.slice();
+            targetStack.push({ type: 'reorderImage', before: action.after, after: action.before });
+            renderImageList();
+        }
+        triggerPreviewUpdate();
+    }
+
+    document.getElementById('undoBtn').onclick = undo;
+    document.getElementById('redoBtn').onclick = redo;
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+        if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+    });
 
     const themeSelect = document.getElementById('themeSelect');
     const applyTheme = (themeName) => { document.body.className = themeName === 'default' ? '' : 'theme-' + themeName; };
@@ -169,24 +563,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setStatus(msg) { document.getElementById('statusIndicator').textContent = msg; }
 
-    // Renderiza e gerencia lista de Imagens
     function renderImageList() {
         const container = document.getElementById('imgListContainer');
         container.innerHTML = '';
         AppState.images.forEach((img, index) => {
             const tag = document.createElement('div');
             tag.className = 'item-tag'; tag.draggable = true; tag.dataset.index = index;
-            tag.innerHTML = `${img.name} <span class="remove-btn" style="cursor:pointer;" title="Remover">×</span>`;
-            tag.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); AppState.images.splice(index, 1); renderImageList(); triggerPreviewUpdate(); };
-            tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
-            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderImages(); });
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = img.name;
+            const ocrBtn = document.createElement('button');
+            ocrBtn.type = 'button'; ocrBtn.className = 'ocr-btn'; ocrBtn.title = 'Extrair telefone/nome via OCR';
+            ocrBtn.textContent = '🔍';
+            ocrBtn.onclick = (e) => { e.stopPropagation(); extractDataFromImage(img, ocrBtn); };
+
+            const removeSpan = document.createElement('span');
+            removeSpan.className = 'remove-btn'; removeSpan.style.cursor = 'pointer'; removeSpan.title = 'Remover'; removeSpan.textContent = '×';
+            tag.appendChild(nameSpan); tag.appendChild(ocrBtn); tag.appendChild(removeSpan);
+            removeSpan.onclick = (e) => {
+                e.stopPropagation();
+                const removedItem = AppState.images[index];
+                pushUndo({ type: 'removeImage', index, item: removedItem });
+                AppState.images.splice(index, 1);
+                renderImageList(); triggerPreviewUpdate();
+            };
+            tag.addEventListener('dragstart', () => { tag.classList.add('dragging'); tag._beforeOrder = AppState.images.slice(); });
+            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderImages(tag._beforeOrder); });
             container.appendChild(tag);
         });
     }
 
-    function reorderImages() {
+    function reorderImages(beforeOrder) {
         const newOrder = [...document.querySelectorAll('#imgListContainer .item-tag')].map(tag => AppState.images[tag.dataset.index]);
-        AppState.images = newOrder; renderImageList(); triggerPreviewUpdate();
+        const changed = !beforeOrder || beforeOrder.length !== newOrder.length || beforeOrder.some((it, i) => it !== newOrder[i]);
+        AppState.images = newOrder;
+        if (changed && beforeOrder) pushUndo({ type: 'reorderImage', before: beforeOrder, after: newOrder.slice() });
+        renderImageList(); triggerPreviewUpdate();
     }
 
     function handleImageFiles(files) {
@@ -194,40 +605,133 @@ document.addEventListener("DOMContentLoaded", () => {
         AppState.images.push(...newFiles); renderImageList(); triggerPreviewUpdate();
     }
 
-    // Renderiza e gerencia lista de PDFs
+    let ocrWorkerPromise = null;
+    function getOcrWorker() {
+        if (!ocrWorkerPromise) {
+            ocrWorkerPromise = Tesseract.createWorker('por');
+        }
+        return ocrWorkerPromise;
+    }
+
+    function showOcrReview(rawText, foundFields) {
+        const panel = document.getElementById('ocrReview');
+        const fieldsEl = document.getElementById('ocrFieldsFound');
+        const rawEl = document.getElementById('ocrRawText');
+        panel.style.display = 'block';
+        panel.open = true;
+        fieldsEl.innerHTML = '';
+        if (foundFields.length === 0) {
+            const span = document.createElement('span');
+            span.style.background = '#d32f2f';
+            span.textContent = 'Nada reconhecido automaticamente — confira o texto abaixo';
+            fieldsEl.appendChild(span);
+        } else {
+            foundFields.forEach(f => {
+                const span = document.createElement('span');
+                span.textContent = f;
+                fieldsEl.appendChild(span);
+            });
+        }
+        rawEl.textContent = rawText;
+    }
+
+    async function extractDataFromImage(file, triggerBtn) {
+        if (typeof Tesseract === 'undefined') {
+            showMessage("Biblioteca de OCR não carregou. Verifique a conexão e recarregue a página.", true);
+            return;
+        }
+        if (triggerBtn) { triggerBtn.disabled = true; triggerBtn.textContent = '⏳'; }
+        setStatus("🔍 Extraindo dados da imagem...");
+        try {
+            const worker = await getOcrWorker();
+            const result = await worker.recognize(file);
+            const text = result.data.text;
+            const normalized = text.replace(/\s+/g, ' ').trim();
+
+            const foundFields = [];
+
+            // 1. Extração de Telefone
+            const phoneMatch = normalized.match(/(?:\+?55\s?)?\(?\d{2}\)?\s?\d{4,5}-?\d{4}/);
+            if (phoneMatch) {
+                const phoneInput = document.getElementById('telefone');
+                if (!phoneInput.value) {
+                    let cleanPhone = phoneMatch[0].replace(/^\+?55/, '').replace(/\D/g, '');
+                    cleanPhone = insertNinthDigit(cleanPhone);
+                    phoneInput.value = cleanPhone;
+                    phoneInput.dispatchEvent(new Event('input'));
+                    foundFields.push('Telefone: ' + phoneInput.value);
+                }
+            }
+
+            // 2. Extração de Nome Aprimorada
+            let nameMatch = normalized.match(/Converso com (?:o|a)?\s*Sr[aA]?\.?\s([^,\?]+)/i);
+            if (!nameMatch) nameMatch = normalized.match(/NP\s(.*?)\sN[°ºo9]/i);
+            if (!nameMatch) nameMatch = normalized.match(/(?:S[oó]ci[oa]|Representante).*?:\s*([^,\.\n\?]+)/i);
+
+            if (nameMatch && nameMatch[1]) {
+                const nameInput = document.getElementById('nomeContato');
+                if (!nameInput.value) {
+                    nameInput.value = nameMatch[1].trim();
+                    nameInput.dispatchEvent(new Event('input'));
+                    foundFields.push('Nome: ' + nameInput.value);
+                }
+            }
+
+            showOcrReview(text, foundFields);
+
+            setStatus(foundFields.length ? "✅ Dados extraídos, confira abaixo" : "⚠️ Nada reconhecido, confira o texto");
+            setTimeout(() => setStatus(""), 4000);
+        } catch (e) {
+            console.error("Erro OCR:", e);
+            setStatus("❌ Falha ao extrair dados");
+            showMessage("Falha ao processar OCR: " + e.message, true);
+        } finally {
+            if (triggerBtn) { triggerBtn.disabled = false; triggerBtn.textContent = '🔍'; }
+        }
+    }
+
     function renderPdfList() {
         const container = document.getElementById('pdfListContainer');
         container.innerHTML = '';
         AppState.pdfs.forEach((pdf, index) => {
             const tag = document.createElement('div');
             tag.className = 'item-tag'; tag.draggable = true; tag.dataset.index = index;
-            
-            tag.innerHTML = `
-                ${pdf.name} 
-                <input type="text" placeholder="Excluir pág (ex: 2, 4)" title="Páginas para excluir separadas por vírgula"
-                       value="${pdf.pagesToRemove || ''}"
-                       style="width: 130px; padding: 2px 5px; margin-left: 5px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #ccc; color: #1f1d1d;"
-                       onclick="event.stopPropagation()">
-                <span class="remove-btn" style="cursor:pointer; margin-left: 5px; font-weight: bold;" title="Remover">×</span>
-            `;
-            
-            const input = tag.querySelector('input');
-            input.addEventListener('input', (e) => {
-                pdf.pagesToRemove = e.target.value;
-                triggerPreviewUpdate();
-            });
-            input.addEventListener('mousedown', (e) => e.stopPropagation());
 
-            tag.querySelector('.remove-btn').onclick = (e) => { e.stopPropagation(); AppState.pdfs.splice(index, 1); renderPdfList(); triggerPreviewUpdate(); };
-            tag.addEventListener('dragstart', () => tag.classList.add('dragging'));
-            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderPdfs(); });
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = pdf.name;
+
+            const input = document.createElement('input');
+            input.type = 'text'; input.placeholder = 'Excluir pág (ex: 2, 4)'; input.title = 'Páginas para excluir separadas por vírgula';
+            input.value = pdf.pagesToRemove || '';
+            input.style.cssText = 'width:130px;padding:2px 5px;margin-left:5px;font-size:0.8rem;border-radius:4px;border:1px solid #ccc;color:#1f1d1d;';
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('mousedown', (e) => e.stopPropagation());
+            input.addEventListener('input', (e) => { pdf.pagesToRemove = e.target.value; triggerPreviewUpdate(); });
+
+            const removeSpan = document.createElement('span');
+            removeSpan.className = 'remove-btn'; removeSpan.style.cssText = 'cursor:pointer;margin-left:5px;font-weight:bold;'; removeSpan.title = 'Remover'; removeSpan.textContent = '×';
+            removeSpan.onclick = (e) => {
+                e.stopPropagation();
+                const removedItem = AppState.pdfs[index];
+                pushUndo({ type: 'removePdf', index, item: removedItem });
+                AppState.pdfs.splice(index, 1);
+                renderPdfList(); triggerPreviewUpdate();
+            };
+
+            tag.appendChild(nameSpan); tag.appendChild(input); tag.appendChild(removeSpan);
+
+            tag.addEventListener('dragstart', () => { tag.classList.add('dragging'); tag._beforeOrder = AppState.pdfs.slice(); });
+            tag.addEventListener('dragend', () => { tag.classList.remove('dragging'); reorderPdfs(tag._beforeOrder); });
             container.appendChild(tag);
         });
     }
 
-    function reorderPdfs() {
+    function reorderPdfs(beforeOrder) {
         const newOrder = [...document.querySelectorAll('#pdfListContainer .item-tag')].map(tag => AppState.pdfs[tag.dataset.index]);
-        AppState.pdfs = newOrder; renderPdfList(); triggerPreviewUpdate();
+        const changed = !beforeOrder || beforeOrder.length !== newOrder.length || beforeOrder.some((it, i) => it !== newOrder[i]);
+        AppState.pdfs = newOrder;
+        if (changed && beforeOrder) pushUndo({ type: 'reorderPdf', before: beforeOrder, after: newOrder.slice() });
+        renderPdfList(); triggerPreviewUpdate();
     }
 
     async function handlePdfFiles(files) {
@@ -302,12 +806,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const fontBold = await mergedPdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
         const fontReg = await mergedPdf.embedFont(PDFLib.StandardFonts.Helvetica);
-        
+
         const totalPages = mergedPdf.getPageCount();
         let targetPageNum = parseInt(document.getElementById('boxPageNum').value) || 1;
         if (targetPageNum < 1) targetPageNum = 1;
         if (targetPageNum > totalPages) targetPageNum = totalPages;
-        
+
         let boxPage = mergedPdf.getPages()[targetPageNum - 1];
         const { width, height } = boxPage.getSize();
 
@@ -344,8 +848,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const titlePadding = 25;
         const bottomPadding = 15;
         const lineHeight = 14;
-        
-        const dynamicHeight = rawFields.length > 0 
+
+        const dynamicHeight = rawFields.length > 0
             ? titlePadding + bottomPadding + (requiredLines * lineHeight) + manualAdjust
             : titlePadding + bottomPadding + manualAdjust;
 
@@ -365,7 +869,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let cursorY = finalY + dynamicHeight - 40;
         for (let pf of processedFields) {
             boxPage.drawText(pf.label, { x: finalX + 10, y: cursorY, size: 12, font: fontBold });
-            
+
             let lineCursorY = cursorY;
             for (let line of pf.lines) {
                 boxPage.drawText(line, { x: finalX + 100, y: lineCursorY, size: 10, font: fontReg });
@@ -374,13 +878,12 @@ document.addEventListener("DOMContentLoaded", () => {
             cursorY -= (Math.max(1, pf.lines.length) * lineHeight);
         }
 
-        // Configuração das Margens de 2 cm (1 cm = 28.35 pontos pdf-lib) e espaçamento interno de 1 cm
-        const marginPt = 2 * 28.35; 
-        const gapY = 1 * 28.35;     
+        const marginPt = 2 * 28.35;
+        const gapY = 1 * 28.35;
 
         for (let i = 0; i < AppState.images.length; i += 2) {
             const imgPage = mergedPdf.addPage([width, height]);
-            
+
             const maxWidth = width - (marginPt * 2);
             const maxHeight = (height - (marginPt * 2) - gapY) / 2;
 
@@ -390,25 +893,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 const file = AppState.images[i + j];
                 const imgBytes = await file.arrayBuffer();
                 const img = file.type === "image/png" ? await mergedPdf.embedPng(imgBytes) : await mergedPdf.embedJpg(imgBytes);
-                
+
                 const dims = img.scaleToFit(maxWidth, maxHeight);
                 const x = width / 2 - dims.width / 2;
-                
+
                 let y;
                 if (j === 0) {
-                    // Imagem Superior: Alinha a partir do topo da área útil descontando a margem superior
                     const topLimit = height - marginPt;
                     y = topLimit - (maxHeight / 2) - (dims.height / 2);
                 } else {
-                    // Imagem Inferior: Alinha a partir da base da área útil somando a margem inferior
                     const bottomLimit = marginPt;
                     y = bottomLimit + (maxHeight / 2) - (dims.height / 2);
                 }
-                
+
                 imgPage.drawImage(img, { x, y, width: dims.width, height: dims.height });
             }
         }
-        
+
         return await mergedPdf.save();
     }
 
@@ -428,14 +929,12 @@ document.addEventListener("DOMContentLoaded", () => {
         setStatus("");
     }, 800);
 
-    // Eventos de entrada
     document.querySelectorAll('.auto-update').forEach(i => i.addEventListener('input', triggerPreviewUpdate));
     document.getElementById("fileInput").onchange = (e) => handlePdfFiles(e.target.files);
     document.getElementById("imgInput").onchange = (e) => handleImageFiles(e.target.files);
     document.getElementById("clearBtn").onclick = () => location.reload();
     document.getElementById("previewBtn").onclick = triggerPreviewUpdate;
-    
-    // Frases Prontas
+
     document.querySelectorAll('.presetPhrase').forEach(cb => {
         cb.onchange = () => {
             const nome = document.getElementById('nomeContato').value || "_____";
@@ -448,18 +947,18 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     });
 
-    // Download
     document.getElementById("downloadBtn").onclick = async () => {
         try {
             const bytes = await gerarPdfBytes();
             if (!bytes) { showMessage("Nenhum PDF gerado."); return; }
+            pushToHistory();
             const blob = new Blob([bytes], { type: "application/pdf" });
             const suggestedName = AppState.pdfs.length > 0 ? AppState.pdfs[0].name : "Notificacao.pdf";
-            
+
             if ('showSaveFilePicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({ suggestedName, startIn: 'documents', 
-                    types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] 
+                    const handle = await window.showSaveFilePicker({ suggestedName, startIn: 'documents',
+                    types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }]
                 });
                     const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
                 } catch (err) { if (err.name === 'AbortError') return; }
@@ -468,12 +967,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) { showMessage("Erro ao baixar: " + e.message); }
     };
 
-    // Máscara Telefones
+    function insertNinthDigit(nums) {
+        if (nums.length === 10) {
+            const localFirst = nums[2];
+            if (parseInt(localFirst, 10) >= 6) {
+                return nums.slice(0, 2) + '9' + nums.slice(2);
+            }
+        }
+        return nums;
+    }
+
     document.getElementById('telefone').oninput = (e) => {
         let value = e.target.value;
         let partes = value.split(';');
         let formatadas = partes.map(parte => {
             let nums = parte.replace(/\D/g, '');
+            nums = insertNinthDigit(nums);
             if (nums.length > 10) return nums.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
             else if (nums.length > 6) return nums.replace(/^(\d{2})(\d{4})(\d{4}).*/, '($1) $2-$3');
             else if (nums.length > 2) return nums.replace(/^(\d{2})(\d+)/, '($1) $2');
