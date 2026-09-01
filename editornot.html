@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -396,6 +397,34 @@
 document.addEventListener("DOMContentLoaded", () => {
     const AppState = { pdfs: [], images: [], isProcessing: false };
     const CONFIG = { margins: { left: 41, right: 41, top: 30, bottom: 40 } };
+
+    // ===================== ARRASTAR E SOLTAR (DRAG & DROP) =====================
+    function setupDragContainer(containerId) {
+        const container = document.getElementById(containerId);
+        container.addEventListener('dragover', e => {
+            e.preventDefault(); // Permite o drop
+            const dragging = container.querySelector('.dragging');
+            if (!dragging) return;
+
+            // Busca os elementos que não estão sendo arrastados
+            const siblings = [...container.querySelectorAll('.item-tag:not(.dragging)')];
+            
+            // Calcula a posição de inserção com base nas coordenadas do mouse
+            const nextNode = siblings.find(sibling => {
+                const box = sibling.getBoundingClientRect();
+                const inSameRow = e.clientY >= box.top && e.clientY <= box.bottom;
+                
+                if (inSameRow) return e.clientX < box.left + box.width / 2;
+                return e.clientY < box.top;
+            });
+            
+            // Move o elemento no DOM
+            container.insertBefore(dragging, nextNode || null);
+        });
+    }
+
+    setupDragContainer('pdfListContainer');
+    setupDragContainer('imgListContainer');
 
     // ===================== MODAL DE INSTRUÇÕES =====================
     const modal = document.getElementById("helpModal");
